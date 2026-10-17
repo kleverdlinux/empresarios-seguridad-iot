@@ -145,6 +145,37 @@ class DatabaseManager:
                 VALUES (?, ?, ?, ?, ?, 'ACTIVO', ?, 0, 0, 0);
                 """, ('001643199', 'Kleverd Gabriel', 'Apaza Quispe', 'Administrador de Seguridad IoT', 'Tecnología y Operaciones', ahora))
 
+            # 8. Sembrar historial de incidentes y alarmas CCTV si la tabla esta vacia
+            cursor.execute("SELECT COUNT(*) AS total FROM logs_incidentes;")
+            if cursor.fetchone()['total'] == 0:
+                incidentes_semilla = [
+                    ('CAMARA_CCTV_IA', 'CRITICO', 'Intrusión detectada en Laboratorio Central de Cómputo (14.2% variación óptica) en horario no laboral', '2026-10-17 14:38:15'),
+                    ('ALARMA_PANICO_MANUAL', 'CRITICO', 'Sirena perimetral y baliza de advertencia activadas manualmente desde consola CCTV', '2026-10-17 13:15:40'),
+                    ('CERRADURA_REMOTE', 'INFO', 'Apertura remota autorizada de esclusa por 5 segundos desde videovigilancia CCTV', '2026-10-17 11:42:08'),
+                    ('PIR_PRESENCIA', 'ADVERTENCIA', 'Sensor infrarrojo detectó presencia en pasillo lateral sin autenticación previa', '2026-10-17 08:30:22'),
+                    ('SW420_IMPACTO', 'CRITICO', 'Impacto violento detectado en sensor SW-420 montado en la puerta de acceso principal', '2026-10-16 23:45:10'),
+                    ('CAMARA_CCTV_IA', 'CRITICO', 'Alerta Centinela: Movimiento no autorizado en zona perimetral este (22.5% variación)', '2026-10-16 21:12:35'),
+                    ('PUERTA_FORZADA', 'CRITICO', 'Alerta de puerta forzada: Se detectó apertura física sin activación del relé solenoide', '2026-10-16 18:20:00'),
+                    ('CERRADURA_REMOTE', 'INFO', 'Desbloqueo de emergencia emitido para inspección técnica de ronda de supervisión', '2026-10-16 15:05:14'),
+                    ('SW420_IMPACTO', 'ADVERTENCIA', 'Micro-vibración detectada en gabinete del controlador IoT por cierre de esclusa', '2026-10-16 09:14:50'),
+                    ('CAMARA_CCTV_IA', 'CRITICO', 'Cruce de línea virtual Centinela en Almacén Tecnológico fuera de horario de operaciones', '2026-10-15 22:50:18'),
+                    ('INTRUSION_FACIAL_1A1', 'CRITICO', 'Intento de suplantación facial: Sujeto no identificado intentó validar rostro frente a terminal', '2026-10-15 19:35:44'),
+                    ('PIR_PRESENCIA', 'ADVERTENCIA', 'Detección de presencia repetida frente al sensor de esclusa (3 intentos consecutivos)', '2026-10-15 16:10:02'),
+                    ('ALARMA_PANICO', 'CRITICO', 'Prueba operativa de sirena acústica y baliza de seguridad perimetral completada', '2026-10-15 11:00:00'),
+                    ('CAMARA_CCTV_IA', 'CRITICO', 'Intrusión nocturna detectada en zona de racks de telecomunicaciones (18.1% variación)', '2026-10-14 23:18:20'),
+                    ('SW420_IMPACTO', 'ADVERTENCIA', 'Sensor de impacto SW-420 activado por oscilación mecánica en puerta de acceso', '2026-10-14 18:40:15'),
+                    ('INTRUSION_HUELLA_1A1', 'CRITICO', 'Suplantación dactilar 1:1: Huella óptica presentada no coincide con registro del colaborador', '2026-10-14 14:22:55'),
+                    ('TERMINAL_DESBLOQUEO', 'INFO', 'Apertura autorizada de terminal para mantenimiento preventivo del lector biométrico', '2026-10-14 10:15:30'),
+                    ('CAMARA_CCTV_IA', 'CRITICO', 'Intrusión detectada en Laboratorio Central de Cómputo (18.8% variación) fuera de horario', '2026-10-13 20:30:12'),
+                    ('CAMARA_CCTV_IA', 'INFO', 'Calibración de umbral de sensibilidad Centinela IA establecida en 1.0% (Modo Alerta)', '2026-10-13 17:15:00'),
+                    ('RELE_REMOTO', 'INFO', 'Prueba de energización y retención electromagnética de solenoide 12V DC satisfactoria', '2026-10-13 12:00:00')
+                ]
+                for tipo, nivel, desc, ts in incidentes_semilla:
+                    cursor.execute("""
+                    INSERT INTO logs_incidentes (tipo_sensor, nivel_alerta, descripcion, timestamp)
+                    VALUES (?, ?, ?, ?);
+                    """, (tipo, nivel, desc, ts))
+
             conn.commit()
 
     # =========================================================================

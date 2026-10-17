@@ -972,25 +972,32 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
         # =====================================================================
         # 6. HARDWARE Y TELEMETRIA
         # =====================================================================
-        if ruta == '/api/hardware/disparar_rele':
+        if ruta in ('/api/hardware/disparar_rele', '/api/hardware/abrir_puerta'):
             segundos = self.activar_puerta_temporizada()
+            origen = datos.get('origen', 'PANEL_ADMIN')
             db.registrar_acceso(
                 usuario_id=None,
-                nombre_usuario="ADMINISTRADOR",
+                nombre_usuario="OPERADOR_CCTV" if 'CCTV' in origen else "ADMINISTRADOR",
                 dni="N/A",
                 metodo="CCTV_OVERRIDE",
-                terminal="PANEL_ADMIN",
+                terminal="TERMINAL_CCTV" if 'CCTV' in origen else "PANEL_ADMIN",
                 estado="PERMITIDO",
-                detalle="Apertura remota forzada desde terminal de control"
+                detalle=f"Apertura remota de esclusa autorizada por {segundos} segundos ({origen})"
+            )
+            db.registrar_incidente(
+                tipo_sensor="CERRADURA_REMOTE",
+                nivel_alerta="INFO",
+                descripcion=f"Apertura remota autorizada de esclusa por {segundos} segundos desde {origen}"
             )
             self.responder_json(200, {'exito': True, 'mensaje': f'Cerradura desasegurada por {segundos} segundos'})
             return
 
         if ruta == '/api/hardware/evento_sensor':
-            tipo_sensor = datos.get('tipo', 'SW420_IMPACTO')
+            tipo_sensor = datos.get('tipo_sensor') or datos.get('tipo', 'SW420_IMPACTO')
+            nivel = datos.get('nivel_alerta') or datos.get('nivel', 'ADVERTENCIA')
             descripcion = datos.get('descripcion', 'Evento detectado en nodo de seguridad')
-            nivel = datos.get('nivel', 'ADVERTENCIA')
-            db.registrar_incidente(tipo_sensor, nivel, descripcion)
+            timestamp = datos.get('timestamp') or ahora_peru_iso()
+            db.registrar_incidente(tipo_sensor, nivel, descripcion, timestamp=timestamp)
             self.responder_json(200, {'exito': True, 'mensaje': 'Incidente registrado'})
             return
 

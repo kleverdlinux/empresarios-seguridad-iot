@@ -5,7 +5,7 @@
 // y sirva la aplicacion, camara y reportes Excel desde la memoria local.
 // =============================================================================
 
-const CACHE_NAME = 'empresariotec-pwa-v51';
+const CACHE_NAME = 'empresariotec-pwa-v52';
 
 const CRITICAL_ASSETS = [
   '/',
@@ -243,25 +243,144 @@ const SEED_API_DATA = {
     offline: true,
     logs: [
       {
-        id: 101,
+        id: 752,
         tipo_sensor: "CAMARA_CCTV_IA",
         nivel_alerta: "CRITICO",
-        descripcion: "Alerta intrusión: Movimiento detectado en zona restringida CCTV (Modo Seguridad)",
-        timestamp: "2026-10-17T12:30:15"
+        descripcion: "Intrusión detectada en Laboratorio Central de Cómputo (14.2% variación óptica) en horario no laboral",
+        timestamp: "2026-10-17 14:38:15"
       },
       {
-        id: 100,
-        tipo_sensor: "PANICO_MANUAL",
-        nivel_alerta: "ALERTA",
-        descripcion: "Sirena y alarma perimetral activadas manualmente desde consola CCTV",
-        timestamp: "2026-10-17T11:15:00"
+        id: 751,
+        tipo_sensor: "ALARMA_PANICO_MANUAL",
+        nivel_alerta: "CRITICO",
+        descripcion: "Sirena perimetral y baliza de advertencia activadas manualmente desde consola CCTV",
+        timestamp: "2026-10-17 13:15:40"
       },
       {
-        id: 99,
+        id: 750,
+        tipo_sensor: "CERRADURA_REMOTE",
+        nivel_alerta: "INFO",
+        descripcion: "Apertura remota autorizada de esclusa por 5 segundos desde videovigilancia CCTV",
+        timestamp: "2026-10-17 11:42:08"
+      },
+      {
+        id: 749,
+        tipo_sensor: "PIR_PRESENCIA",
+        nivel_alerta: "ADVERTENCIA",
+        descripcion: "Sensor infrarrojo detectó presencia en pasillo lateral sin autenticación previa",
+        timestamp: "2026-10-17 08:30:22"
+      },
+      {
+        id: 748,
+        tipo_sensor: "SW420_IMPACTO",
+        nivel_alerta: "CRITICO",
+        descripcion: "Impacto violento detectado en sensor SW-420 montado en la puerta de acceso principal",
+        timestamp: "2026-10-16 23:45:10"
+      },
+      {
+        id: 747,
+        tipo_sensor: "CAMARA_CCTV_IA",
+        nivel_alerta: "CRITICO",
+        descripcion: "Alerta Centinela: Movimiento no autorizado en zona perimetral este (22.5% variación)",
+        timestamp: "2026-10-16 21:12:35"
+      },
+      {
+        id: 746,
+        tipo_sensor: "PUERTA_FORZADA",
+        nivel_alerta: "CRITICO",
+        descripcion: "Alerta de puerta forzada: Se detectó apertura física sin activación del relé solenoide",
+        timestamp: "2026-10-16 18:20:00"
+      },
+      {
+        id: 745,
+        tipo_sensor: "CERRADURA_REMOTE",
+        nivel_alerta: "INFO",
+        descripcion: "Desbloqueo de emergencia emitido para inspección técnica de ronda de supervisión",
+        timestamp: "2026-10-16 15:05:14"
+      },
+      {
+        id: 744,
+        tipo_sensor: "SW420_IMPACTO",
+        nivel_alerta: "ADVERTENCIA",
+        descripcion: "Micro-vibración detectada en gabinete del controlador IoT por cierre de esclusa",
+        timestamp: "2026-10-16 09:14:50"
+      },
+      {
+        id: 743,
+        tipo_sensor: "CAMARA_CCTV_IA",
+        nivel_alerta: "CRITICO",
+        descripcion: "Cruce de línea virtual Centinela en Almacén Tecnológico fuera de horario de operaciones",
+        timestamp: "2026-10-15 22:50:18"
+      },
+      {
+        id: 742,
+        tipo_sensor: "INTRUSION_FACIAL_1A1",
+        nivel_alerta: "CRITICO",
+        descripcion: "Intento de suplantación facial: Sujeto no identificado intentó validar rostro frente a terminal",
+        timestamp: "2026-10-15 19:35:44"
+      },
+      {
+        id: 741,
+        tipo_sensor: "PIR_PRESENCIA",
+        nivel_alerta: "ADVERTENCIA",
+        descripcion: "Detección de presencia repetida frente al sensor de esclusa (3 intentos consecutivos)",
+        timestamp: "2026-10-15 16:10:02"
+      },
+      {
+        id: 740,
+        tipo_sensor: "ALARMA_PANICO",
+        nivel_alerta: "CRITICO",
+        descripcion: "Prueba operativa de sirena acústica y baliza de seguridad perimetral completada",
+        timestamp: "2026-10-15 11:00:00"
+      },
+      {
+        id: 739,
+        tipo_sensor: "CAMARA_CCTV_IA",
+        nivel_alerta: "CRITICO",
+        descripcion: "Intrusión nocturna detectada en zona de racks de telecomunicaciones (18.1% variación)",
+        timestamp: "2026-10-14 23:18:20"
+      },
+      {
+        id: 738,
+        tipo_sensor: "SW420_IMPACTO",
+        nivel_alerta: "ADVERTENCIA",
+        descripcion: "Sensor de impacto SW-420 activado por oscilación mecánica en puerta de acceso",
+        timestamp: "2026-10-14 18:40:15"
+      },
+      {
+        id: 737,
+        tipo_sensor: "INTRUSION_HUELLA_1A1",
+        nivel_alerta: "CRITICO",
+        descripcion: "Suplantación dactilar 1:1: Huella óptica presentada no coincide con registro del colaborador",
+        timestamp: "2026-10-14 14:22:55"
+      },
+      {
+        id: 736,
+        tipo_sensor: "TERMINAL_DESBLOQUEO",
+        nivel_alerta: "INFO",
+        descripcion: "Apertura autorizada de terminal para mantenimiento preventivo del lector biométrico",
+        timestamp: "2026-10-14 10:15:30"
+      },
+      {
+        id: 735,
+        tipo_sensor: "CAMARA_CCTV_IA",
+        nivel_alerta: "CRITICO",
+        descripcion: "Intrusión detectada en Laboratorio Central de Cómputo (18.8% variación) fuera de horario",
+        timestamp: "2026-10-13 20:30:12"
+      },
+      {
+        id: 734,
+        tipo_sensor: "CAMARA_CCTV_IA",
+        nivel_alerta: "INFO",
+        descripcion: "Calibración de umbral de sensibilidad Centinela IA establecida en 1.0% (Modo Alerta)",
+        timestamp: "2026-10-13 17:15:00"
+      },
+      {
+        id: 733,
         tipo_sensor: "RELE_REMOTO",
         nivel_alerta: "INFO",
-        descripcion: "Apertura forzada de esclusa de acceso autorizada remotamente desde CCTV",
-        timestamp: "2026-10-17T10:05:22"
+        descripcion: "Prueba de energización y retención electromagnética de solenoide 12V DC satisfactoria",
+        timestamp: "2026-10-13 12:00:00"
       }
     ]
   }
@@ -279,7 +398,7 @@ self.addEventListener('install', (event) => {
           if (res.ok) {
             await cache.put(url, res.clone());
             if (url.endsWith('.js') || url.endsWith('.css')) {
-              await cache.put(url + '?v=20261017_peru_time_v51', res);
+              await cache.put(url + '?v=20261017_cctv_history_v52', res);
             }
           }
         } catch (err) {
