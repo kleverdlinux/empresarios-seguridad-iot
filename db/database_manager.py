@@ -11,6 +11,17 @@ import sqlite3
 import os
 import json
 from datetime import datetime
+try:
+    from zoneinfo import ZoneInfo
+    TZ_PERU = ZoneInfo('America/Lima')
+except Exception:
+    TZ_PERU = None
+
+def ahora_peru_iso():
+    """Genera la fecha y hora oficial sincronizada con la hora de Perú (America/Lima UTC-5)."""
+    if TZ_PERU:
+        return datetime.now(TZ_PERU).strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'seguridad_empresariotec.db')
 
@@ -349,8 +360,8 @@ class DatabaseManager:
     # =========================================================================
 
     def registrar_acceso(self, usuario_id, nombre_usuario, dni, metodo, terminal, estado, detalle="", timestamp=None):
-        """Registra un evento de acceso en el log auditable."""
-        ahora = timestamp or datetime.now().isoformat()
+        """Registra un evento de acceso en el log auditable con hora oficial de Perú."""
+        ahora = timestamp or ahora_peru_iso()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -386,8 +397,8 @@ class DatabaseManager:
             return [dict(f) for f in cursor.fetchall()]
 
     def registrar_incidente(self, tipo_sensor, nivel_alerta, descripcion, timestamp=None):
-        """Registra una anomalia o alerta en la tabla de incidentes."""
-        ahora = timestamp or datetime.now().isoformat()
+        """Registra una anomalia o alerta en la tabla de incidentes con hora oficial de Perú."""
+        ahora = timestamp or ahora_peru_iso()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""

@@ -10,6 +10,7 @@ Servidor multiproceso con soporte dual:
 
 import os
 import sys
+import time
 import json
 import socket
 import ssl
@@ -18,6 +19,14 @@ import mimetypes
 from datetime import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
+
+# Configurar zona horaria oficial del servidor (Perú UTC-5)
+os.environ['TZ'] = 'America/Lima'
+if hasattr(time, 'tzset'):
+    try:
+        time.tzset()
+    except Exception:
+        pass
 
 # Importar modulos locales
 from db.database_manager import DatabaseManager
