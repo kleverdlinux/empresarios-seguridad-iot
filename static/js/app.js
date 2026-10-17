@@ -2750,6 +2750,7 @@ async function cargarListaTrabajadores() {
 
         if (data.exito) {
             AppState.trabajadores = data.trabajadores;
+            try { localStorage.setItem('cached_trabajadores', JSON.stringify(data.trabajadores)); } catch(e){}
             
             // Actualizar selector individual en la pestaña de Reportes Excel
             const selectInd = document.getElementById('selectTrabajadorExportIndividual');
@@ -2768,6 +2769,16 @@ async function cargarListaTrabajadores() {
             }
         }
     } catch (e) {
+        // Fallback offline: leer de cache local si no hay conexion
+        try {
+            const raw = localStorage.getItem('cached_trabajadores');
+            if (raw) {
+                const trabsCache = JSON.parse(raw);
+                AppState.trabajadores = trabsCache;
+                renderizarFilasTrabajadores(trabsCache, '');
+                return;
+            }
+        } catch(err){}
         tbody.innerHTML = '<tr><td colspan="7" style="color: #dc2626; text-align: center;">Error cargando trabajadores</td></tr>';
     }
 }
@@ -3502,6 +3513,7 @@ async function cargarTablaLogs(filtro = null) {
 
         if (data.exito) {
             AppState.todosLosLogs = data.logs;
+            try { localStorage.setItem('cached_logs_accesos', JSON.stringify(data.logs)); } catch(e){}
             const inputBuscar = document.getElementById('inputBuscarLogs');
             const termino = inputBuscar ? inputBuscar.value : '';
             if (termino) {
@@ -3511,7 +3523,17 @@ async function cargarTablaLogs(filtro = null) {
             }
         }
     } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="6" style="color: #dc2626; text-align: center;">Error cargando logs</td></tr>';
+        // Fallback offline: intentar mostrar logs cacheados
+        try {
+            const raw = localStorage.getItem('cached_logs_accesos');
+            if (raw) {
+                const logsCache = JSON.parse(raw);
+                AppState.todosLosLogs = logsCache;
+                renderizarFilasLogs(logsCache, '');
+                return;
+            }
+        } catch(err){}
+        tbody.innerHTML = '<tr><td colspan="6" style="color: #dc2626; text-align: center;">Error cargando logs (Modo Offline)</td></tr>';
     }
 }
 
@@ -3704,6 +3726,32 @@ function descargarXlsxOffline(aoaData, sheetName, filename) {
     if (typeof XLSX !== 'undefined') {
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(aoaData);
+
+        // 1. Calcular anchos de columna generosos para que NO se compriman los textos
+        const colWidths = [];
+        aoaData.forEach((row, rIdx) => {
+            if (rIdx < 3) return; // Omitir títulos para calcular sobre encabezados y datos reales
+            row.forEach((cell, cIdx) => {
+                const s = (cell !== undefined && cell !== null) ? String(cell) : '';
+                colWidths[cIdx] = Math.max(colWidths[cIdx] || 14, Math.min(s.length + 5, 45));
+            });
+        });
+        if (colWidths.length > 0) {
+            ws['!cols'] = colWidths.map(w => ({ wch: w }));
+        } else {
+            ws['!cols'] = [
+                { wch: 8 }, { wch: 22 }, { wch: 14 }, { wch: 26 },
+                { wch: 14 }, { wch: 20 }, { wch: 14 }, { wch: 38 }
+            ];
+        }
+
+        // 2. Unir celdas de encabezado institucional (Merge)
+        const totalCols = (colWidths.length > 0) ? (colWidths.length - 1) : 7;
+        ws['!merges'] = [
+            { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols } },
+            { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols } }
+        ];
+
         XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31));
         XLSX.writeFile(wb, filename);
     } else {
@@ -3760,13 +3808,19 @@ async function exportarExcelNomina() {
         console.warn('Conexión con servidor no disponible, activando motor offline...');
     }
 
-    // Modo Offline: Generar con datos en memoria
+    // Modo Offline: Generar con datos en memoria o en localStorage
     generarExcelNominaOffline();
 }
 
 function generarExcelNominaOffline() {
     const ahora = new Date().toLocaleString('es-PE');
-    const trabajadores = AppState.trabajadores || [];
+    let trabajadores = (AppState.trabajadores && AppState.trabajadores.length > 0) ? AppState.trabajadores : [];
+    if (trabajadores.length === 0) {
+        try {
+            const raw = localStorage.getItem('cached_trabajadores');
+            if (raw) trabajadores = JSON.parse(raw);
+        } catch(e) {}
+    }
 
     const aoa = [
         ['EMPRESARIOTEC S.A. • REPORTE GENERAL DE NÓMINA BIOMÉTRICA'],
@@ -3794,7 +3848,7 @@ function generarExcelNominaOffline() {
     Swal.fire({
         icon: 'success',
         title: 'Nómina Descargada (Offline)',
-        text: 'Archivo Excel .xlsx generado exitosamente en modo sin conexión.',
+        text: `Archivo Excel .xlsx generado con ${trabajadores.length} colaboradores en memoria local.`,
         timer: 2000,
         showConfirmButton: false
     });
@@ -3836,14 +3890,29 @@ async function exportarExcelAccesos() {
         console.warn('Conexión con servidor no disponible, usando motor offline...');
     }
 
-    // Modo Offline: consultar logs locales
-    try {
-        const logsResp = await fetch('/api/logs/accesos?limite=500');
-        const logsData = await logsResp.json();
-        generarExcelAccesosOffline(logsData.logs || []);
-    } catch (e) {
-        generarExcelAccesosOffline([]);
+    // Modo Offline: obtener logs de AppState o de localStorage
+    let logsParaExcel = (AppState.todosLosLogs && AppState.todosLosLogs.length > 0) ? AppState.todosLosLogs : [];
+    if (logsParaExcel.length === 0) {
+        try {
+            const raw = localStorage.getItem('cached_logs_accesos');
+            if (raw) logsParaExcel = JSON.parse(raw);
+        } catch(e) {}
     }
+
+    if (logsParaExcel.length === 0) {
+        try {
+            const logsResp = await fetch('/api/logs/accesos?limite=500');
+            const logsData = await logsResp.json();
+            logsParaExcel = logsData.logs || [];
+            if (logsParaExcel.length > 0) {
+                try { localStorage.setItem('cached_logs_accesos', JSON.stringify(logsParaExcel)); } catch(e){}
+            }
+        } catch (e) {
+            console.warn('No se pudo consultar logs de red para Excel.');
+        }
+    }
+
+    generarExcelAccesosOffline(logsParaExcel);
 }
 
 function generarExcelAccesosOffline(logs) {
@@ -3859,7 +3928,7 @@ function generarExcelAccesosOffline(logs) {
     logs.forEach((l, idx) => {
         aoa.push([
             l.id || (idx + 1),
-            l.timestamp || '',
+            l.timestamp ? l.timestamp.replace('T', ' ').substring(0, 19) : '',
             l.dni || 'N/A',
             l.nombre_usuario || 'Desconocido',
             l.metodo || 'DESCONOCIDO',
@@ -3873,7 +3942,7 @@ function generarExcelAccesosOffline(logs) {
     Swal.fire({
         icon: 'success',
         title: 'Auditoría Descargada (Offline)',
-        text: 'Archivo Excel .xlsx generado exitosamente.',
+        text: `Archivo Excel generado con ${logs.length} eventos de auditoría en memoria.`,
         timer: 2000,
         showConfirmButton: false
     });
@@ -3915,13 +3984,26 @@ async function exportarExcelIncidentes() {
         console.warn('Conexión con servidor no disponible, usando motor offline...');
     }
 
+    let incidentesParaExcel = [];
     try {
-        const incResp = await fetch('/api/logs/incidentes?limite=200');
-        const incData = await incResp.json();
-        generarExcelIncidentesOffline(incData.logs || []);
-    } catch (e) {
-        generarExcelIncidentesOffline([]);
+        const raw = localStorage.getItem('cached_incidentes');
+        if (raw) incidentesParaExcel = JSON.parse(raw);
+    } catch(e) {}
+
+    if (incidentesParaExcel.length === 0) {
+        try {
+            const incResp = await fetch('/api/logs/incidentes?limite=200');
+            const incData = await incResp.json();
+            incidentesParaExcel = incData.logs || [];
+            if (incidentesParaExcel.length > 0) {
+                try { localStorage.setItem('cached_incidentes', JSON.stringify(incidentesParaExcel)); } catch(e){}
+            }
+        } catch (e) {
+            console.warn('No se pudo consultar incidentes de red.');
+        }
     }
+
+    generarExcelIncidentesOffline(incidentesParaExcel);
 }
 
 function generarExcelIncidentesOffline(incidentes) {
@@ -3937,7 +4019,7 @@ function generarExcelIncidentesOffline(incidentes) {
     incidentes.forEach((inc, idx) => {
         aoa.push([
             inc.id || (idx + 1),
-            inc.timestamp || '',
+            inc.timestamp ? inc.timestamp.replace('T', ' ').substring(0, 19) : '',
             inc.tipo_sensor || 'CENTINELA_AI',
             inc.nivel_alerta || 'ADVERTENCIA',
             inc.descripcion || 'Sin detalle'
@@ -3948,7 +4030,7 @@ function generarExcelIncidentesOffline(incidentes) {
     Swal.fire({
         icon: 'success',
         title: 'Bitácora Descargada (Offline)',
-        text: 'Reporte .xlsx generado en modo local.',
+        text: `Archivo Excel generado con ${incidentes.length} incidentes en memoria.`,
         timer: 2000,
         showConfirmButton: false
     });
@@ -3990,20 +4072,30 @@ async function exportarFichaTrabajador(usuarioId) {
         console.warn('Conexión con servidor no disponible para ficha individual, usando motor offline...');
     }
 
-    // Modo Offline: buscar trabajador en memoria
-    const t = (AppState.trabajadores || []).find(item => item.id == usuarioId);
+    // Modo Offline: buscar trabajador en memoria o cache local
+    let todosTrabs = AppState.trabajadores || [];
+    if (todosTrabs.length === 0) {
+        try {
+            const raw = localStorage.getItem('cached_trabajadores');
+            if (raw) todosTrabs = JSON.parse(raw);
+        } catch(e) {}
+    }
+    const t = todosTrabs.find(item => item.id == usuarioId);
     if (!t) {
         Swal.fire({ icon: 'error', title: 'Error', text: 'No se encontró el colaborador solicitado' });
         return;
     }
 
-    try {
-        const logsResp = await fetch(`/api/logs/accesos?filtro=${t.dni}`);
-        const logsData = await logsResp.json();
-        generarExcelTrabajadorOffline(t, logsData.logs || []);
-    } catch (e) {
-        generarExcelTrabajadorOffline(t, []);
+    // Filtrar logs del trabajador desde memoria o cache local
+    let todosLogs = AppState.todosLosLogs || [];
+    if (todosLogs.length === 0) {
+        try {
+            const rawL = localStorage.getItem('cached_logs_accesos');
+            if (rawL) todosLogs = JSON.parse(rawL);
+        } catch(e) {}
     }
+    const logsUsuario = todosLogs.filter(l => l.usuario_id == t.id || l.dni == t.dni);
+    generarExcelTrabajadorOffline(t, logsUsuario);
 }
 
 function generarExcelTrabajadorOffline(trabajador, logsUsuario) {
