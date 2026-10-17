@@ -178,6 +178,13 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         self.end_headers()
 
+    def do_HEAD(self):
+        """Maneja health-checks automáticos de Render y Cloudflare."""
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+
     def do_GET(self):
         parsed_url = urlparse(self.path)
         ruta = parsed_url.path
