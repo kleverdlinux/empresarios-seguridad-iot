@@ -664,16 +664,57 @@
               </div>
               <div>
                 <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0f172a;">Historial de Alertas e Incidentes CCTV</h3>
-                <p style="margin: 0; font-size: 0.75rem; color: #64748b;">Bitácora auditable de intrusiones, sensores y alarmas • Operación Continua Online y Offline</p>
+                <p style="margin: 0; font-size: 0.75rem; color: #64748b;">Bitácora auditable de intrusiones, sensores y alarmas • Descarga Excel filtrada (.xlsx)</p>
               </div>
             </div>
             <div class="cctv-alerts-actions">
               <span id="badgeCctvAlertasCount" class="badge-status active" style="font-size: 0.75rem; padding: 0.25rem 0.65rem;">0 Eventos Registrados</span>
-              <button type="button" class="btn btn-outline btn-sm" onclick="exportarExcelIncidentes()" title="Descargar bitácora de incidentes en Excel oficial">
+              <button type="button" class="btn btn-outline btn-sm" onclick="exportarExcelIncidentes()" title="Descargar bitácora de incidentes en Excel oficial (.xlsx) respetando filtros">
                 <svg class="icon" style="color: #d97706;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg>
-                <span>Descargar Bitácora (.xlsx)</span>
+                <span id="lblBtnDescargarExcelIncidentes">Descargar Bitácora (.xlsx)</span>
               </button>
             </div>
+          </div>
+
+          <!-- Barra de Filtros Interactiva para Historial CCTV -->
+          <div class="cctv-filter-toolbar">
+            <div class="filter-item">
+              <span class="filter-item-label">Desde:</span>
+              <input type="date" id="filtroFechaDesdeCctv" class="filter-input-date" onchange="aplicarFiltrosIncidentesMultiples()" title="Fecha inicial del reporte">
+            </div>
+            <div class="filter-item">
+              <span class="filter-item-label">Hasta:</span>
+              <input type="date" id="filtroFechaHastaCctv" class="filter-input-date" onchange="aplicarFiltrosIncidentesMultiples()" title="Fecha final del reporte">
+            </div>
+            <div class="filter-item" style="flex: 1; min-width: 170px;">
+              <span class="filter-item-label">Sensor:</span>
+              <select id="filtroSensorCctv" class="filter-select" style="width: 100%;" onchange="aplicarFiltrosIncidentesMultiples()">
+                <option value="">Todos los Sensores / Eventos</option>
+                <option value="CAMARA_CCTV_IA">Cámara CCTV Centinela IA</option>
+                <option value="SW420_IMPACTO">Sensor de Impacto SW-420</option>
+                <option value="PIR_PRESENCIA">Sensor Infrarrojo PIR</option>
+                <option value="ALARMA_PANICO">Alarma de Pánico / Sirena</option>
+                <option value="CERRADURA_REMOTE">Cerradura / Solenoide Remoto</option>
+                <option value="PUERTA_FORZADA">Apertura Forzada de Esclusa</option>
+                <option value="INTRUSION_FACIAL_1A1">Suplantación Facial 1:1</option>
+                <option value="INTRUSION_HUELLA_1A1">Suplantación Dactilar 1:1</option>
+              </select>
+            </div>
+            <div class="filter-item">
+              <span class="filter-item-label">Nivel:</span>
+              <select id="filtroNivelCctv" class="filter-select" onchange="aplicarFiltrosIncidentesMultiples()">
+                <option value="">Todos los Niveles</option>
+                <option value="CRITICO">🚨 CRÍTICO</option>
+                <option value="ADVERTENCIA">⚠️ ADVERTENCIA</option>
+                <option value="INFO">ℹ️ INFO</option>
+              </select>
+            </div>
+            <div class="filter-item" style="flex: 1; min-width: 140px;">
+              <input type="text" id="inputBuscarCctv" class="filter-select" style="width: 100%;" placeholder="Buscar en incidentes..." oninput="aplicarFiltrosIncidentesMultiples()">
+            </div>
+            <button type="button" class="btn-filter-clear" onclick="limpiarTodosFiltrosIncidentes()" title="Restablecer filtros de incidentes">
+              ✕ Limpiar
+            </button>
           </div>
 
           <div class="table-responsive" style="max-height: 280px; overflow-y: auto; margin-top: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
@@ -1066,6 +1107,25 @@
             </div>
           </form>
         </div>
+
+        <!-- TARJETA DE MANTENIMIENTO: PURGA Y RESETEO DE BASE DE DATOS A CERO -->
+        <div class="table-card" style="padding: 1.5rem; max-width: 700px; margin: 1.5rem auto 0 auto; border: 1px solid #fee2e2; background: #fffaf0; border-radius: var(--radius-md);">
+          <div style="display: flex; gap: 1rem; align-items: flex-start;">
+            <div style="width: 42px; height: 42px; border-radius: 10px; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+            </div>
+            <div style="flex: 1;">
+              <h4 style="font-size: 1.05rem; font-weight: 700; color: #991b1b; margin: 0 0 0.35rem 0;">Mantenimiento: Limpieza y Reseteo de Base de Datos a CERO</h4>
+              <p style="font-size: 0.82rem; color: #7f1d1d; margin: 0 0 1rem 0; line-height: 1.45;">
+                Purga completamente todas las tablas de auditoría de accesos, fotos faciales y registros de incidentes. Deja las tablas en cero absoluto (0 filas) para comenzar nuevas pruebas limpias, conservando las contraseñas y el usuario administrador maestro.
+              </p>
+              <button type="button" class="btn btn-outline" style="border-color: #dc2626; color: #dc2626; font-weight: 700;" onclick="solicitarReseteoBaseDeDatos()">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Restablecer Base de Datos a Cero
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- CONTENIDO PESTAÑA 3: AUDITORIA Y LOGS -->
@@ -1073,24 +1133,27 @@
         <div class="table-card">
           <div class="logs-header-toolbar-responsive">
             <div class="logs-title-row">
-              <span class="logs-main-title">Registro de Eventos y Accesos</span>
+              <div>
+                <span class="logs-main-title">Registro de Eventos y Auditoría de Accesos</span>
+                <p style="margin: 0.2rem 0 0 0; font-size: 0.75rem; color: #64748b;">Descargue el reporte oficial en Excel (.xlsx) acorde a los filtros seleccionados</p>
+              </div>
               <div class="logs-export-buttons">
-                <button type="button" class="btn btn-outline btn-sm" onclick="exportarCsvLogs()" title="Descargar auditoría en formato CSV (Online y Offline)">
+                <button type="button" class="btn btn-outline btn-sm" onclick="exportarCsvLogs()" title="Descargar auditoría filtrada en formato CSV (Online y Offline)">
                   <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                   <span>Descargar CSV</span>
                 </button>
-                <button type="button" class="btn btn-outline btn-sm btn-excel-download" onclick="exportarExcelAccesos()" title="Descargar auditoría en formato Excel Oficial (.xlsx)">
+                <button type="button" class="btn btn-outline btn-sm btn-excel-download" onclick="exportarExcelAccesos()" title="Descargar auditoría en formato Excel Oficial (.xlsx) con filtros">
                   <svg class="icon" style="color: #16a34a;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
-                  <span>Descargar .xlsx</span>
+                  <span id="lblBtnDescargarExcelLogs">Descargar Excel (.xlsx)</span>
                 </button>
               </div>
             </div>
 
-            <!-- Buscador y Filtros de Estado para Auditoría -->
+            <!-- Fila 1 de Filtros: Buscador de Texto y Filtros Rápidos -->
             <div class="logs-filter-row">
               <div class="search-input-wrapper logs-search-field">
                 <svg class="icon search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" id="inputBuscarLogs" class="search-control" placeholder="Buscar en auditoría (DNI, trabajador, sensor...)" oninput="filtrarLogsEnVivo(this.value)">
+                <input type="text" id="inputBuscarLogs" class="search-control" placeholder="Buscar por DNI, trabajador, terminal..." oninput="aplicarFiltrosLogsMultiples()">
                 <button id="btnLimpiarBuscarLogs" class="btn-clear-search" onclick="limpiarBusquedaLogs()" style="display: none;">✕</button>
               </div>
 
@@ -1099,6 +1162,34 @@
                 <button id="btnLogFilterPermitido" class="btn-filter-pill" onclick="cambiarFiltroLogs('PERMITIDO')">Permitidos</button>
                 <button id="btnLogFilterDenegado" class="btn-filter-pill" onclick="cambiarFiltroLogs('DENEGADO')">Denegados</button>
               </div>
+            </div>
+
+            <!-- Fila 2 de Filtros: Rango de Fecha y Terminal/Lugar -->
+            <div class="filter-controls-grid">
+              <div class="filter-item">
+                <span class="filter-item-label">Desde:</span>
+                <input type="date" id="filtroFechaDesdeLogs" class="filter-input-date" onchange="aplicarFiltrosLogsMultiples()" title="Fecha inicial del reporte">
+              </div>
+              <div class="filter-item">
+                <span class="filter-item-label">Hasta:</span>
+                <input type="date" id="filtroFechaHastaLogs" class="filter-input-date" onchange="aplicarFiltrosLogsMultiples()" title="Fecha final del reporte">
+              </div>
+              <div class="filter-item" style="flex: 1; min-width: 180px;">
+                <span class="filter-item-label">Lugar / Terminal:</span>
+                <select id="filtroTerminalLogs" class="filter-select" style="width: 100%;" onchange="aplicarFiltrosLogsMultiples()">
+                  <option value="">Todos los Lugares / Terminales</option>
+                  <option value="TERMINAL_FACIAL">Terminal Facial (Acceso LBPH)</option>
+                  <option value="TERMINAL_HUELLA">Terminal Biométrico Huella</option>
+                  <option value="TERMINAL_CCTV">Centro de Monitoreo CCTV</option>
+                  <option value="PANEL_ADMIN">Panel Maestro Admin</option>
+                  <option value="TORNIQUETE_PRINCIPAL">Torniquete Principal</option>
+                  <option value="BARRERA_VEHICULAR">Barrera Vehicular</option>
+                  <option value="ESCLUSA_ENTRADA">Esclusa de Entrada</option>
+                </select>
+              </div>
+              <button type="button" class="btn-filter-clear" onclick="limpiarTodosFiltrosLogs()" title="Restablecer todos los filtros a cero">
+                ✕ Limpiar Filtros
+              </button>
             </div>
           </div>
 

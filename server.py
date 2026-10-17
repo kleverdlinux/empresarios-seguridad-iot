@@ -302,20 +302,45 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
             return
 
         if ruta == '/api/logs/accesos':
-            limite = int(query.get('limite', [100])[0])
+            limite = int(query.get('limite', [2000])[0])
             filtro = query.get('filtro', [None])[0]
-            logs = db.obtener_logs_acceso(limite=limite, filtro=filtro)
-            self.responder_json(200, {'exito': True, 'logs': logs})
+            desde = query.get('desde', [None])[0]
+            hasta = query.get('hasta', [None])[0]
+            terminal = query.get('terminal', [None])[0]
+            estado = query.get('estado', [None])[0]
+            texto = query.get('texto', [None])[0]
+            logs = db.obtener_logs_acceso(
+                limite=limite, filtro=filtro, desde=desde, hasta=hasta,
+                terminal=terminal, estado=estado, texto=texto
+            )
+            self.responder_json(200, {'exito': True, 'logs': logs, 'total': len(logs)})
             return
 
         if ruta == '/api/logs/incidentes':
-            limite = int(query.get('limite', [100])[0])
-            logs = db.obtener_logs_incidentes(limite=limite)
-            self.responder_json(200, {'exito': True, 'logs': logs})
+            limite = int(query.get('limite', [1000])[0])
+            desde = query.get('desde', [None])[0]
+            hasta = query.get('hasta', [None])[0]
+            sensor = query.get('sensor', [None])[0]
+            nivel = query.get('nivel', [None])[0]
+            texto = query.get('texto', [None])[0]
+            logs = db.obtener_logs_incidentes(
+                limite=limite, desde=desde, hasta=hasta, sensor=sensor, nivel=nivel, texto=texto
+            )
+            self.responder_json(200, {'exito': True, 'logs': logs, 'total': len(logs)})
             return
 
         if ruta == '/api/logs/exportar_csv':
-            logs = db.obtener_logs_acceso(limite=500)
+            limite = int(query.get('limite', [2000])[0])
+            filtro = query.get('filtro', [None])[0]
+            desde = query.get('desde', [None])[0]
+            hasta = query.get('hasta', [None])[0]
+            terminal = query.get('terminal', [None])[0]
+            estado = query.get('estado', [None])[0]
+            texto = query.get('texto', [None])[0]
+            logs = db.obtener_logs_acceso(
+                limite=limite, filtro=filtro, desde=desde, hasta=hasta,
+                terminal=terminal, estado=estado, texto=texto
+            )
             csv_lineas = ["ID,Fecha_Hora,DNI,Usuario,Metodo,Terminal,Estado,Detalle\n"]
             for l in logs:
                 csv_lineas.append(f"{l['id']},\"{l['timestamp']}\",\"{l['dni']}\",\"{l['nombre_usuario']}\",\"{l['metodo']}\",\"{l['terminal']}\",\"{l['estado']}\",\"{l['detalle']}\"\n")
@@ -344,19 +369,78 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
             return
 
         if ruta == '/api/reportes/excel/accesos':
-            limite = int(query.get('limite', [1000])[0])
-            logs = db.obtener_logs_acceso(limite=limite)
-            xlsx_bytes = exportar_excel_auditoria_accesos(logs)
+            limite = int(query.get('limite', [2000])[0])
+            filtro = query.get('filtro', [None])[0]
+            desde = query.get('desde', [None])[0]
+            hasta = query.get('hasta', [None])[0]
+            terminal = query.get('terminal', [None])[0]
+            estado = query.get('estado', [None])[0]
+            texto = query.get('texto', [None])[0]
+
+            logs = db.obtener_logs_acceso(
+                limite=limite, filtro=filtro, desde=desde, hasta=hasta,
+                terminal=terminal, estado=estado, texto=texto
+            )
+
+            # Construir resumen de filtros aplicados para la cabecera del Excel
+            desc_filtros = []
+            if desde and hasta:
+                desc_filtros.append(f"Rango: {desde} al {hasta}")
+            elif desde:
+                desc_filtros.append(f"Desde: {desde}")
+            elif hasta:
+                desc_filtros.append(f"Hasta: {hasta}")
+
+            if terminal and terminal.upper() not in ('', 'TODOS', 'TODAS', 'ALL'):
+                desc_filtros.append(f"Lugar/Terminal: {terminal}")
+
+            if estado and estado.upper() not in ('', 'TODOS', 'TODAS', 'ALL'):
+                desc_filtros.append(f"Estado: {estado}")
+
+            if texto and texto.strip():
+                desc_filtros.append(f"Búsqueda: '{texto.strip()}'")
+
+            filtros_str = " | ".join(desc_filtros) if desc_filtros else "Todos los registros (Sin filtros)"
+
+            xlsx_bytes = exportar_excel_auditoria_accesos(logs, filtros_desc=filtros_str)
             timestamp_str = datetime.now(TZ_PERU).strftime('%Y%m%d_%H%M%S')
-            self.responder_excel(xlsx_bytes, f"auditoria_accesos_empresariotec_{timestamp_str}.xlsx")
+            self.responder_excel(xlsx_bytes, f"auditoria_accesos_{timestamp_str}.xlsx")
             return
 
         if ruta == '/api/reportes/excel/incidentes':
-            limite = int(query.get('limite', [500])[0])
-            incidentes = db.obtener_logs_incidentes(limite=limite)
-            xlsx_bytes = exportar_excel_incidentes_seguridad(incidentes)
+            limite = int(query.get('limite', [1500])[0])
+            desde = query.get('desde', [None])[0]
+            hasta = query.get('hasta', [None])[0]
+            sensor = query.get('sensor', [None])[0]
+            nivel = query.get('nivel', [None])[0]
+            texto = query.get('texto', [None])[0]
+
+            incidentes = db.obtener_logs_incidentes(
+                limite=limite, desde=desde, hasta=hasta, sensor=sensor, nivel=nivel, texto=texto
+            )
+
+            desc_filtros = []
+            if desde and hasta:
+                desc_filtros.append(f"Rango: {desde} al {hasta}")
+            elif desde:
+                desc_filtros.append(f"Desde: {desde}")
+            elif hasta:
+                desc_filtros.append(f"Hasta: {hasta}")
+
+            if sensor and sensor.upper() not in ('', 'TODOS', 'TODAS', 'ALL'):
+                desc_filtros.append(f"Sensor/Origen: {sensor}")
+
+            if nivel and nivel.upper() not in ('', 'TODOS', 'TODAS', 'ALL'):
+                desc_filtros.append(f"Nivel: {nivel}")
+
+            if texto and texto.strip():
+                desc_filtros.append(f"Búsqueda: '{texto.strip()}'")
+
+            filtros_str = " | ".join(desc_filtros) if desc_filtros else "Todos los incidentes (Sin filtros)"
+
+            xlsx_bytes = exportar_excel_incidentes_seguridad(incidentes, filtros_desc=filtros_str)
             timestamp_str = datetime.now(TZ_PERU).strftime('%Y%m%d_%H%M%S')
-            self.responder_excel(xlsx_bytes, f"incidentes_cctv_empresariotec_{timestamp_str}.xlsx")
+            self.responder_excel(xlsx_bytes, f"incidentes_cctv_{timestamp_str}.xlsx")
             return
 
         if ruta.startswith('/api/reportes/excel/trabajador/'):
@@ -441,6 +525,25 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
                 'exito': True, 
                 'mensaje': f'{actualizados} configuraciones actualizadas correctamente',
                 'configuraciones': db.obtener_configuraciones()
+            })
+            return
+
+        # =====================================================================
+        # 2.0 RESETEO Y PURGA TOTAL DE BASE DE DATOS A CERO
+        # =====================================================================
+        if ruta == '/api/admin/database/reset':
+            admin_pwd = datos.get('password', '')
+            configs = db.obtener_configuraciones()
+            pwd_real = configs.get('admin_pwd', {}).get('valor', 'admin123')
+            if admin_pwd != pwd_real:
+                self.responder_json(401, {'exito': False, 'mensaje': 'Contraseña de administrador incorrecta. Operación de reseteo denegada.'})
+                return
+
+            purgar_usuarios = bool(datos.get('purgar_usuarios', True))
+            db.resetear_base_de_datos_a_cero(purgar_usuarios_secundarios=purgar_usuarios)
+            self.responder_json(200, {
+                'exito': True,
+                'mensaje': 'Base de datos restablecida a CERO total con éxito. Auditoría e incidentes en cero.'
             })
             return
 

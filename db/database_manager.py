@@ -145,37 +145,6 @@ class DatabaseManager:
                 VALUES (?, ?, ?, ?, ?, 'ACTIVO', ?, 0, 0, 0);
                 """, ('001643199', 'Kleverd Gabriel', 'Apaza Quispe', 'Administrador de Seguridad IoT', 'Tecnología y Operaciones', ahora))
 
-            # 8. Sembrar historial de incidentes y alarmas CCTV si la tabla esta vacia
-            cursor.execute("SELECT COUNT(*) AS total FROM logs_incidentes;")
-            if cursor.fetchone()['total'] == 0:
-                incidentes_semilla = [
-                    ('CAMARA_CCTV_IA', 'CRITICO', 'Intrusión detectada en Laboratorio Central de Cómputo (14.2% variación óptica) en horario no laboral', '2026-10-17 14:38:15'),
-                    ('ALARMA_PANICO_MANUAL', 'CRITICO', 'Sirena perimetral y baliza de advertencia activadas manualmente desde consola CCTV', '2026-10-17 13:15:40'),
-                    ('CERRADURA_REMOTE', 'INFO', 'Apertura remota autorizada de esclusa por 5 segundos desde videovigilancia CCTV', '2026-10-17 11:42:08'),
-                    ('PIR_PRESENCIA', 'ADVERTENCIA', 'Sensor infrarrojo detectó presencia en pasillo lateral sin autenticación previa', '2026-10-17 08:30:22'),
-                    ('SW420_IMPACTO', 'CRITICO', 'Impacto violento detectado en sensor SW-420 montado en la puerta de acceso principal', '2026-10-16 23:45:10'),
-                    ('CAMARA_CCTV_IA', 'CRITICO', 'Alerta Centinela: Movimiento no autorizado en zona perimetral este (22.5% variación)', '2026-10-16 21:12:35'),
-                    ('PUERTA_FORZADA', 'CRITICO', 'Alerta de puerta forzada: Se detectó apertura física sin activación del relé solenoide', '2026-10-16 18:20:00'),
-                    ('CERRADURA_REMOTE', 'INFO', 'Desbloqueo de emergencia emitido para inspección técnica de ronda de supervisión', '2026-10-16 15:05:14'),
-                    ('SW420_IMPACTO', 'ADVERTENCIA', 'Micro-vibración detectada en gabinete del controlador IoT por cierre de esclusa', '2026-10-16 09:14:50'),
-                    ('CAMARA_CCTV_IA', 'CRITICO', 'Cruce de línea virtual Centinela en Almacén Tecnológico fuera de horario de operaciones', '2026-10-15 22:50:18'),
-                    ('INTRUSION_FACIAL_1A1', 'CRITICO', 'Intento de suplantación facial: Sujeto no identificado intentó validar rostro frente a terminal', '2026-10-15 19:35:44'),
-                    ('PIR_PRESENCIA', 'ADVERTENCIA', 'Detección de presencia repetida frente al sensor de esclusa (3 intentos consecutivos)', '2026-10-15 16:10:02'),
-                    ('ALARMA_PANICO', 'CRITICO', 'Prueba operativa de sirena acústica y baliza de seguridad perimetral completada', '2026-10-15 11:00:00'),
-                    ('CAMARA_CCTV_IA', 'CRITICO', 'Intrusión nocturna detectada en zona de racks de telecomunicaciones (18.1% variación)', '2026-10-14 23:18:20'),
-                    ('SW420_IMPACTO', 'ADVERTENCIA', 'Sensor de impacto SW-420 activado por oscilación mecánica en puerta de acceso', '2026-10-14 18:40:15'),
-                    ('INTRUSION_HUELLA_1A1', 'CRITICO', 'Suplantación dactilar 1:1: Huella óptica presentada no coincide con registro del colaborador', '2026-10-14 14:22:55'),
-                    ('TERMINAL_DESBLOQUEO', 'INFO', 'Apertura autorizada de terminal para mantenimiento preventivo del lector biométrico', '2026-10-14 10:15:30'),
-                    ('CAMARA_CCTV_IA', 'CRITICO', 'Intrusión detectada en Laboratorio Central de Cómputo (18.8% variación) fuera de horario', '2026-10-13 20:30:12'),
-                    ('CAMARA_CCTV_IA', 'INFO', 'Calibración de umbral de sensibilidad Centinela IA establecida en 1.0% (Modo Alerta)', '2026-10-13 17:15:00'),
-                    ('RELE_REMOTO', 'INFO', 'Prueba de energización y retención electromagnética de solenoide 12V DC satisfactoria', '2026-10-13 12:00:00')
-                ]
-                for tipo, nivel, desc, ts in incidentes_semilla:
-                    cursor.execute("""
-                    INSERT INTO logs_incidentes (tipo_sensor, nivel_alerta, descripcion, timestamp)
-                    VALUES (?, ?, ?, ?);
-                    """, (tipo, nivel, desc, ts))
-
             conn.commit()
 
     # =========================================================================
@@ -408,18 +377,51 @@ class DatabaseManager:
             conn.commit()
             return cursor.lastrowid
 
-    def obtener_logs_acceso(self, limite=100, filtro=None):
-        """Obtiene los ultimos eventos de acceso registrados."""
+    def obtener_logs_acceso(self, limite=2000, filtro=None, desde=None, hasta=None, terminal=None, estado=None, texto=None):
+        """Obtiene eventos de acceso con filtros multi-criterio flexibles (fechas, lugar/terminal, estado, texto)."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            if filtro:
-                cursor.execute("""
-                SELECT * FROM logs_acceso
-                WHERE estado = ? OR metodo = ? OR terminal = ?
-                ORDER BY id DESC LIMIT ?;
-                """, (filtro, filtro, filtro, limite))
-            else:
-                cursor.execute("SELECT * FROM logs_acceso ORDER BY id DESC LIMIT ?;", (limite,))
+            condiciones = []
+            params = []
+
+            # 1. Filtro rápido de estado / método / terminal
+            if filtro and filtro.upper() not in ('', 'TODOS', 'TODAS', 'ALL'):
+                condiciones.append("(estado = ? OR metodo = ? OR terminal = ?)")
+                params.extend([filtro, filtro, filtro])
+
+            # 2. Rango de Fechas
+            if desde and str(desde).strip():
+                condiciones.append("timestamp >= ?")
+                params.append(f"{str(desde).strip()} 00:00:00")
+
+            if hasta and str(hasta).strip():
+                condiciones.append("timestamp <= ?")
+                params.append(f"{str(hasta).strip()} 23:59:59")
+
+            # 3. Terminal / Lugar
+            if terminal and str(terminal).strip().upper() not in ('', 'TODOS', 'TODAS', 'ALL'):
+                t_val = str(terminal).strip()
+                condiciones.append("(terminal = ? OR terminal LIKE ?)")
+                params.extend([t_val, f"%{t_val}%"])
+
+            # 4. Estado de Acceso
+            if estado and str(estado).strip().upper() not in ('', 'TODOS', 'TODAS', 'ALL'):
+                condiciones.append("estado = ?")
+                params.append(str(estado).strip().upper())
+
+            # 5. Búsqueda de Texto (DNI, Nombre, Detalle)
+            if texto and str(texto).strip():
+                q = f"%{str(texto).strip()}%"
+                condiciones.append("(nombre_usuario LIKE ? OR dni LIKE ? OR detalle LIKE ? OR terminal LIKE ?)")
+                params.extend([q, q, q, q])
+
+            query = "SELECT * FROM logs_acceso"
+            if condiciones:
+                query += " WHERE " + " AND ".join(condiciones)
+            query += " ORDER BY id DESC LIMIT ?;"
+            params.append(limite)
+
+            cursor.execute(query, tuple(params))
             return [dict(f) for f in cursor.fetchall()]
 
     def obtener_logs_acceso_por_usuario(self, usuario_id, limite=100):
@@ -445,12 +447,71 @@ class DatabaseManager:
             conn.commit()
             return cursor.lastrowid
 
-    def obtener_logs_incidentes(self, limite=100):
-        """Obtiene el historial de incidentes de seguridad."""
+    def obtener_logs_incidentes(self, limite=1000, desde=None, hasta=None, sensor=None, nivel=None, texto=None):
+        """Obtiene el historial de incidentes de seguridad con filtros flexibles (fechas, sensor, nivel, texto)."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM logs_incidentes ORDER BY id DESC LIMIT ?;", (limite,))
+            condiciones = []
+            params = []
+
+            if desde and str(desde).strip():
+                condiciones.append("timestamp >= ?")
+                params.append(f"{str(desde).strip()} 00:00:00")
+
+            if hasta and str(hasta).strip():
+                condiciones.append("timestamp <= ?")
+                params.append(f"{str(hasta).strip()} 23:59:59")
+
+            if sensor and str(sensor).strip().upper() not in ('', 'TODOS', 'TODAS', 'ALL'):
+                s_val = str(sensor).strip()
+                condiciones.append("(tipo_sensor = ? OR tipo_sensor LIKE ?)")
+                params.extend([s_val, f"%{s_val}%"])
+
+            if nivel and str(nivel).strip().upper() not in ('', 'TODOS', 'TODAS', 'ALL'):
+                condiciones.append("nivel_alerta = ?")
+                params.append(str(nivel).strip().upper())
+
+            if texto and str(texto).strip():
+                q = f"%{str(texto).strip()}%"
+                condiciones.append("(descripcion LIKE ? OR tipo_sensor LIKE ?)")
+                params.extend([q, q])
+
+            query = "SELECT * FROM logs_incidentes"
+            if condiciones:
+                query += " WHERE " + " AND ".join(condiciones)
+            query += " ORDER BY id DESC LIMIT ?;"
+            params.append(limite)
+
+            cursor.execute(query, tuple(params))
             return [dict(f) for f in cursor.fetchall()]
+
+    def resetear_base_de_datos_a_cero(self, purgar_usuarios_secundarios=True):
+        """
+        Purga y restablece la base de datos a CERO total:
+        - Vacía logs_acceso (0 registros)
+        - Vacía logs_incidentes (0 registros)
+        - Vacía fotos_faciales (0 registros)
+        - Reinicia las secuencias AUTOINCREMENT
+        - Preserva configuración de terminales y la cuenta administrativa del sistema.
+        """
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM logs_acceso;")
+            cursor.execute("DELETE FROM logs_incidentes;")
+            cursor.execute("DELETE FROM fotos_faciales;")
+            cursor.execute("DELETE FROM sqlite_sequence WHERE name IN ('logs_acceso', 'logs_incidentes', 'fotos_faciales');")
+
+            if purgar_usuarios_secundarios:
+                # Mantener solo el usuario admin primario si existe, limpiando datos de prueba secundarios
+                cursor.execute("DELETE FROM usuarios WHERE dni != '001643199';")
+                cursor.execute("""
+                UPDATE usuarios 
+                SET rostro_registrado = 0, fotos_entrenadas = 0, huella_registrada = 0,
+                    huella_credential_id = NULL, huella_public_key = NULL
+                WHERE dni = '001643199';
+                """)
+            conn.commit()
+            return True
 
     def obtener_estadisticas_dashboard(self):
         """Retorna las metricas operativas en tiempo real para el panel de administracion."""

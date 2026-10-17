@@ -5,7 +5,7 @@
 // y sirva la aplicacion, camara y reportes Excel desde la memoria local.
 // =============================================================================
 
-const CACHE_NAME = 'empresariotec-pwa-v52';
+const CACHE_NAME = 'empresariotec-pwa-v53';
 
 const CRITICAL_ASSETS = [
   '/',
@@ -33,25 +33,11 @@ const SEED_API_DATA = {
         cargo: "Administrador de Seguridad IoT",
         departamento: "Tecnología y Operaciones",
         estado: "ACTIVO",
-        fecha_registro: "2026-10-13T12:56:40",
+        fecha_registro: "2026-10-17 12:00:00",
         foto_perfil: null,
-        huella_registrada: 1,
-        rostro_registrado: 1,
-        fotos_entrenadas: 3
-      },
-      {
-        id: 2,
-        dni: "92742345",
-        nombres: "Carlos",
-        apellidos: "Rodríguez Peña",
-        cargo: "Administrador de equipos",
-        departamento: "Operaciones",
-        estado: "ACTIVO",
-        fecha_registro: "2026-10-13T17:28:37",
-        foto_perfil: null,
-        huella_registrada: 1,
-        rostro_registrado: 1,
-        fotos_entrenadas: 3
+        huella_registrada: 0,
+        rostro_registrado: 0,
+        fotos_entrenadas: 0
       }
     ]
   },
@@ -59,330 +45,23 @@ const SEED_API_DATA = {
     exito: true,
     offline: true,
     stats: {
-      total_trabajadores: 2,
-      accesos_permitidos: 270,
-      accesos_denegados: 456,
-      alertas_criticas: 489,
-      rostros_activos: 2,
-      huellas_activas: 2
+      total_trabajadores: 1,
+      accesos_permitidos: 0,
+      accesos_denegados: 0,
+      alertas_criticas: 0,
+      rostros_activos: 0,
+      huellas_activas: 0
     }
   },
   '/api/logs/accesos': {
     exito: true,
     offline: true,
-    logs: [
-      {
-        id: 726,
-        usuario_id: 2,
-        nombre_usuario: "Carlos Rodríguez Peña",
-        dni: "92742345",
-        metodo: "HUELLA",
-        terminal: "TERMINAL_HUELLA",
-        estado: "PERMITIDO",
-        detalle: "Huella óptica 1:N (Índice Derecho) identificada con 90.8% (15 minucias ORB)",
-        timestamp: "2026-10-14T21:59:14.002632"
-      },
-      {
-        id: 725,
-        usuario_id: null,
-        nombre_usuario: "Desconocido",
-        dni: "--------",
-        metodo: "HUELLA",
-        terminal: "TERMINAL_HUELLA",
-        estado: "DENEGADO",
-        detalle: "Huella óptica desconocida / no registrada (Mejor match: 7.1%)",
-        timestamp: "2026-10-14T21:59:06.627056"
-      },
-      {
-        id: 724,
-        usuario_id: null,
-        nombre_usuario: "Desconocido",
-        dni: "--------",
-        metodo: "HUELLA",
-        terminal: "TERMINAL_HUELLA",
-        estado: "DENEGADO",
-        detalle: "Huella óptica desconocida / no registrada (Mejor match: 8.0%)",
-        timestamp: "2026-10-14T21:58:59.257683"
-      },
-      {
-        id: 723,
-        usuario_id: 1,
-        nombre_usuario: "Kleverd Gabriel Apaza Quispe",
-        dni: "001643199",
-        metodo: "HUELLA",
-        terminal: "TERMINAL_HUELLA",
-        estado: "PERMITIDO",
-        detalle: "Huella óptica 1:N (Índice Derecho) identificada con 99.6% (51 minucias ORB)",
-        timestamp: "2026-10-14T21:58:51.821503"
-      },
-      {
-        id: 722,
-        usuario_id: null,
-        nombre_usuario: "Desconocido",
-        dni: "--------",
-        metodo: "HUELLA",
-        terminal: "TERMINAL_HUELLA",
-        estado: "DENEGADO",
-        detalle: "Huella óptica desconocida / no registrada (Mejor match: 23.9%)",
-        timestamp: "2026-10-14T21:58:09.455967"
-      },
-      {
-        id: 721,
-        usuario_id: null,
-        nombre_usuario: "Desconocido",
-        dni: "--------",
-        metodo: "HUELLA",
-        terminal: "TERMINAL_HUELLA",
-        estado: "DENEGADO",
-        detalle: "Huella óptica desconocida / no registrada (Mejor match: 14.4%)",
-        timestamp: "2026-10-14T21:58:01.993596"
-      },
-      {
-        id: 720,
-        usuario_id: null,
-        nombre_usuario: "Desconocido",
-        dni: "--------",
-        metodo: "HUELLA",
-        terminal: "TERMINAL_HUELLA",
-        estado: "DENEGADO",
-        detalle: "Huella óptica desconocida / no registrada (Mejor match: 5.8%)",
-        timestamp: "2026-10-14T21:56:33.946726"
-      },
-      {
-        id: 719,
-        usuario_id: null,
-        nombre_usuario: "Desconocido",
-        dni: "--------",
-        metodo: "HUELLA",
-        terminal: "TERMINAL_HUELLA",
-        estado: "DENEGADO",
-        detalle: "Huella óptica desconocida / no registrada (Mejor match: 10.7%)",
-        timestamp: "2026-10-14T21:56:26.598418"
-      },
-      {
-        id: 718,
-        usuario_id: null,
-        nombre_usuario: "Desconocido",
-        dni: "--------",
-        metodo: "HUELLA",
-        terminal: "TERMINAL_HUELLA",
-        estado: "DENEGADO",
-        detalle: "Huella óptica desconocida / no registrada (Mejor match: 16.0%)",
-        timestamp: "2026-10-14T21:56:19.251803"
-      },
-      {
-        id: 717,
-        usuario_id: null,
-        nombre_usuario: "Desconocido",
-        dni: "--------",
-        metodo: "HUELLA",
-        terminal: "TERMINAL_HUELLA",
-        estado: "DENEGADO",
-        detalle: "Huella óptica desconocida / no registrada (Mejor match: 9.2%)",
-        timestamp: "2026-10-14T21:56:10.415214"
-      },
-      {
-        id: 716,
-        usuario_id: 2,
-        nombre_usuario: "Carlos Rodríguez Peña",
-        dni: "92742345",
-        metodo: "HUELLA",
-        terminal: "TERMINAL_HUELLA",
-        estado: "PERMITIDO",
-        detalle: "Huella óptica 1:N (Índice Derecho) identificada con 99.6% (56 minucias ORB)",
-        timestamp: "2026-10-14T21:56:03.705161"
-      },
-      {
-        id: 715,
-        usuario_id: null,
-        nombre_usuario: "Desconocido",
-        dni: "--------",
-        metodo: "HUELLA",
-        terminal: "TERMINAL_HUELLA",
-        estado: "DENEGADO",
-        detalle: "Huella óptica desconocida / no registrada (Mejor match: 17.6%)",
-        timestamp: "2026-10-14T21:55:56.514058"
-      },
-      {
-        id: 714,
-        usuario_id: null,
-        nombre_usuario: "Desconocido",
-        dni: "--------",
-        metodo: "HUELLA",
-        terminal: "TERMINAL_HUELLA",
-        estado: "DENEGADO",
-        detalle: "Huella óptica desconocida / no registrada (Mejor match: 10.7%)",
-        timestamp: "2026-10-14T21:55:49.085702"
-      },
-      {
-        id: 713,
-        usuario_id: null,
-        nombre_usuario: "Desconocido",
-        dni: "--------",
-        metodo: "HUELLA",
-        terminal: "TERMINAL_HUELLA",
-        estado: "DENEGADO",
-        detalle: "Huella óptica desconocida / no registrada (Mejor match: 5.9%)",
-        timestamp: "2026-10-14T21:55:40.702206"
-      },
-      {
-        id: 712,
-        usuario_id: 1,
-        nombre_usuario: "Kleverd Gabriel Apaza Quispe",
-        dni: "001643199",
-        metodo: "HUELLA",
-        terminal: "TERMINAL_HUELLA",
-        estado: "DENEGADO",
-        detalle: "SUPLANTACION_1A1_HUELLA: Huella no corresponde a Kleverd Gabriel (10.6%)",
-        timestamp: "2026-10-14T21:55:33.467658"
-      }
-    ]
+    logs: []
   },
   '/api/logs/incidentes': {
     exito: true,
     offline: true,
-    logs: [
-      {
-        id: 752,
-        tipo_sensor: "CAMARA_CCTV_IA",
-        nivel_alerta: "CRITICO",
-        descripcion: "Intrusión detectada en Laboratorio Central de Cómputo (14.2% variación óptica) en horario no laboral",
-        timestamp: "2026-10-17 14:38:15"
-      },
-      {
-        id: 751,
-        tipo_sensor: "ALARMA_PANICO_MANUAL",
-        nivel_alerta: "CRITICO",
-        descripcion: "Sirena perimetral y baliza de advertencia activadas manualmente desde consola CCTV",
-        timestamp: "2026-10-17 13:15:40"
-      },
-      {
-        id: 750,
-        tipo_sensor: "CERRADURA_REMOTE",
-        nivel_alerta: "INFO",
-        descripcion: "Apertura remota autorizada de esclusa por 5 segundos desde videovigilancia CCTV",
-        timestamp: "2026-10-17 11:42:08"
-      },
-      {
-        id: 749,
-        tipo_sensor: "PIR_PRESENCIA",
-        nivel_alerta: "ADVERTENCIA",
-        descripcion: "Sensor infrarrojo detectó presencia en pasillo lateral sin autenticación previa",
-        timestamp: "2026-10-17 08:30:22"
-      },
-      {
-        id: 748,
-        tipo_sensor: "SW420_IMPACTO",
-        nivel_alerta: "CRITICO",
-        descripcion: "Impacto violento detectado en sensor SW-420 montado en la puerta de acceso principal",
-        timestamp: "2026-10-16 23:45:10"
-      },
-      {
-        id: 747,
-        tipo_sensor: "CAMARA_CCTV_IA",
-        nivel_alerta: "CRITICO",
-        descripcion: "Alerta Centinela: Movimiento no autorizado en zona perimetral este (22.5% variación)",
-        timestamp: "2026-10-16 21:12:35"
-      },
-      {
-        id: 746,
-        tipo_sensor: "PUERTA_FORZADA",
-        nivel_alerta: "CRITICO",
-        descripcion: "Alerta de puerta forzada: Se detectó apertura física sin activación del relé solenoide",
-        timestamp: "2026-10-16 18:20:00"
-      },
-      {
-        id: 745,
-        tipo_sensor: "CERRADURA_REMOTE",
-        nivel_alerta: "INFO",
-        descripcion: "Desbloqueo de emergencia emitido para inspección técnica de ronda de supervisión",
-        timestamp: "2026-10-16 15:05:14"
-      },
-      {
-        id: 744,
-        tipo_sensor: "SW420_IMPACTO",
-        nivel_alerta: "ADVERTENCIA",
-        descripcion: "Micro-vibración detectada en gabinete del controlador IoT por cierre de esclusa",
-        timestamp: "2026-10-16 09:14:50"
-      },
-      {
-        id: 743,
-        tipo_sensor: "CAMARA_CCTV_IA",
-        nivel_alerta: "CRITICO",
-        descripcion: "Cruce de línea virtual Centinela en Almacén Tecnológico fuera de horario de operaciones",
-        timestamp: "2026-10-15 22:50:18"
-      },
-      {
-        id: 742,
-        tipo_sensor: "INTRUSION_FACIAL_1A1",
-        nivel_alerta: "CRITICO",
-        descripcion: "Intento de suplantación facial: Sujeto no identificado intentó validar rostro frente a terminal",
-        timestamp: "2026-10-15 19:35:44"
-      },
-      {
-        id: 741,
-        tipo_sensor: "PIR_PRESENCIA",
-        nivel_alerta: "ADVERTENCIA",
-        descripcion: "Detección de presencia repetida frente al sensor de esclusa (3 intentos consecutivos)",
-        timestamp: "2026-10-15 16:10:02"
-      },
-      {
-        id: 740,
-        tipo_sensor: "ALARMA_PANICO",
-        nivel_alerta: "CRITICO",
-        descripcion: "Prueba operativa de sirena acústica y baliza de seguridad perimetral completada",
-        timestamp: "2026-10-15 11:00:00"
-      },
-      {
-        id: 739,
-        tipo_sensor: "CAMARA_CCTV_IA",
-        nivel_alerta: "CRITICO",
-        descripcion: "Intrusión nocturna detectada en zona de racks de telecomunicaciones (18.1% variación)",
-        timestamp: "2026-10-14 23:18:20"
-      },
-      {
-        id: 738,
-        tipo_sensor: "SW420_IMPACTO",
-        nivel_alerta: "ADVERTENCIA",
-        descripcion: "Sensor de impacto SW-420 activado por oscilación mecánica en puerta de acceso",
-        timestamp: "2026-10-14 18:40:15"
-      },
-      {
-        id: 737,
-        tipo_sensor: "INTRUSION_HUELLA_1A1",
-        nivel_alerta: "CRITICO",
-        descripcion: "Suplantación dactilar 1:1: Huella óptica presentada no coincide con registro del colaborador",
-        timestamp: "2026-10-14 14:22:55"
-      },
-      {
-        id: 736,
-        tipo_sensor: "TERMINAL_DESBLOQUEO",
-        nivel_alerta: "INFO",
-        descripcion: "Apertura autorizada de terminal para mantenimiento preventivo del lector biométrico",
-        timestamp: "2026-10-14 10:15:30"
-      },
-      {
-        id: 735,
-        tipo_sensor: "CAMARA_CCTV_IA",
-        nivel_alerta: "CRITICO",
-        descripcion: "Intrusión detectada en Laboratorio Central de Cómputo (18.8% variación) fuera de horario",
-        timestamp: "2026-10-13 20:30:12"
-      },
-      {
-        id: 734,
-        tipo_sensor: "CAMARA_CCTV_IA",
-        nivel_alerta: "INFO",
-        descripcion: "Calibración de umbral de sensibilidad Centinela IA establecida en 1.0% (Modo Alerta)",
-        timestamp: "2026-10-13 17:15:00"
-      },
-      {
-        id: 733,
-        tipo_sensor: "RELE_REMOTO",
-        nivel_alerta: "INFO",
-        descripcion: "Prueba de energización y retención electromagnética de solenoide 12V DC satisfactoria",
-        timestamp: "2026-10-13 12:00:00"
-      }
-    ]
+    logs: []
   }
 };
 

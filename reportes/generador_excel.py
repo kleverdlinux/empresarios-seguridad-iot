@@ -233,8 +233,8 @@ def exportar_excel_nomina_completa(trabajadores):
     wb.close()
     return output.getvalue()
 
-def exportar_excel_auditoria_accesos(logs):
-    """Genera reporte grupal de auditoría de accesos en formato nativo .xlsx."""
+def exportar_excel_auditoria_accesos(logs, filtros_desc=None):
+    """Genera reporte grupal de auditoría de accesos en formato nativo .xlsx con filtros dinámicos."""
     output = io.BytesIO()
     wb = xlsxwriter.Workbook(output, {'in_memory': True})
     ws = wb.add_worksheet('Auditoria_Accesos')
@@ -261,7 +261,12 @@ def exportar_excel_auditoria_accesos(logs):
     ws.set_row(0, 36)
     ws.merge_range(0, 0, 0, 7, '  EMPRESARIOTEC S.A. • AUDITORÍA DE ACCESOS BIOMÉTRICOS IoT', fmt['title'])
     ws.set_row(1, 22)
-    ws.merge_range(1, 0, 1, 7, f'  Generado: {ahora_legible} | Bitácora Inmutable | Total Registros: {len(logs)}', fmt['subtitle'])
+    subtitulo = f'  Generado: {ahora_legible} | Total Registros: {len(logs)}'
+    if filtros_desc:
+        subtitulo += f' | Filtros: {filtros_desc}'
+    else:
+        subtitulo += ' | Filtros: Todos los eventos (Sin filtros)'
+    ws.merge_range(1, 0, 1, 7, subtitulo, fmt['subtitle'])
     ws.set_row(2, 10)
 
     # Cabeceras
@@ -379,8 +384,8 @@ def exportar_excel_trabajador_individual(trabajador, logs_usuario):
     wb.close()
     return output.getvalue()
 
-def exportar_excel_incidentes_seguridad(incidentes):
-    """Genera reporte grupal de incidentes de seguridad y alarmas Centinela en formato nativo .xlsx."""
+def exportar_excel_incidentes_seguridad(incidentes, filtros_desc=None):
+    """Genera reporte grupal de incidentes de seguridad y alarmas Centinela en formato nativo .xlsx con filtros dinámicos."""
     output = io.BytesIO()
     wb = xlsxwriter.Workbook(output, {'in_memory': True})
     ws = wb.add_worksheet('Incidentes_Seguridad')
@@ -402,7 +407,12 @@ def exportar_excel_incidentes_seguridad(incidentes):
     ws.set_row(0, 36)
     ws.merge_range(0, 0, 0, 4, '  EMPRESARIOTEC S.A. • BITÁCORA DE INCIDENTES Y ALARMAS', fmt['title'])
     ws.set_row(1, 22)
-    ws.merge_range(1, 0, 1, 4, f'  Emisión: {ahora_legible} | Supervisión Centinela y Sensores de Impacto', fmt['subtitle'])
+    subtitulo = f'  Emisión: {ahora_legible} | Supervisión Centinela y Telemetría | Total: {len(incidentes)}'
+    if filtros_desc:
+        subtitulo += f' | Filtros: {filtros_desc}'
+    else:
+        subtitulo += ' | Filtros: Todos los incidentes (Sin filtros)'
+    ws.merge_range(1, 0, 1, 4, subtitulo, fmt['subtitle'])
     ws.set_row(2, 10)
 
     headers = ["ID", "Fecha y Hora", "Tipo de Sensor", "Nivel", "Descripción del Incidente"]
