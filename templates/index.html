@@ -6,7 +6,9 @@
   <title>EMPRESARIOTEC S.A. | Sistema de Seguridad Biométrico IoT</title>
   
   <!-- Estilos del Sistema (Modo Claro Oficial) -->
-  <link rel="stylesheet" href="/static/css/style.css?v=20261017_offline_realtime_v38">
+  <link rel="stylesheet" href="/static/css/style.css?v=20261017_offline_realtime_v39">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#0284c7">
   
   <!-- SweetAlert2 Offline Bundle -->
   <script src="/static/js/sweetalert2.all.min.js"></script>
@@ -1423,9 +1425,20 @@
 
   <!-- Scripts del Sistema -->
   <script src="/static/js/xlsx.full.min.js"></script>
-  <script src="/static/js/sonidos.js?v=20261017_offline_realtime_v38"></script>
-  <script src="/static/js/webauthn_biometria.js?v=20261017_offline_realtime_v38"></script>
-  <script src="/static/js/app.js?v=20261017_offline_realtime_v38"></script>
+  <script src="/static/js/sonidos.js?v=20261017_offline_realtime_v39"></script>
+  <script src="/static/js/webauthn_biometria.js?v=20261017_offline_realtime_v39"></script>
+  <script src="/static/js/app.js?v=20261017_offline_realtime_v39"></script>
+
+  <!-- PWA Service Worker (Evita la pantalla del dinosaurio sin internet) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .then(reg => console.log('[PWA] Service Worker activo para modo Offline total', reg.scope))
+          .catch(err => console.warn('[PWA] Service Worker:', err));
+      });
+    }
+  </script>
 
   <script>
     // Enrutador de botones de terminales y modulos

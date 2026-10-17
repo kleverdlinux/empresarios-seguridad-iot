@@ -195,6 +195,21 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
             self.servir_archivo(os.path.join(BASE_DIR, 'templates', 'index.html'), 'text/html; charset=utf-8')
             return
 
+        # 1.1 SERVICE WORKER PWA (Offline Anti-Dinosaurio)
+        if ruta == '/sw.js':
+            ruta_sw = os.path.join(BASE_DIR, 'sw.js')
+            if os.path.exists(ruta_sw):
+                with open(ruta_sw, 'rb') as f:
+                    contenido = f.read()
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/javascript; charset=utf-8')
+                self.send_header('Service-Worker-Allowed', '/')
+                self.send_header('Cache-Control', 'no-cache')
+                self.send_header('Content-Length', str(len(contenido)))
+                self.end_headers()
+                self.wfile.write(contenido)
+                return
+
         # 2. ARCHIVOS ESTATICOS (/static/*)
         if ruta.startswith('/static/'):
             ruta_rel = ruta.replace('/static/', '', 1).replace('/', os.sep)
