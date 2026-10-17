@@ -5,7 +5,7 @@
 // y sirva la aplicacion, camara y reportes Excel desde la memoria local.
 // =============================================================================
 
-const CACHE_NAME = 'empresariotec-pwa-v47';
+const CACHE_NAME = 'empresariotec-pwa-v48';
 
 const CRITICAL_ASSETS = [
   '/',
@@ -79,8 +79,30 @@ const SEED_API_DATA = {
         metodo: "HUELLA",
         terminal: "TERMINAL_HUELLA",
         estado: "PERMITIDO",
-        detalle: "Huella óptica 1:N identificada con 90.8% (15 minucias ORB)",
-        timestamp: "2026-10-14T21:59:14"
+        detalle: "Huella óptica 1:N (Índice Derecho) identificada con 90.8% (15 minucias ORB)",
+        timestamp: "2026-10-14T21:59:14.002632"
+      },
+      {
+        id: 725,
+        usuario_id: null,
+        nombre_usuario: "Desconocido",
+        dni: "--------",
+        metodo: "HUELLA",
+        terminal: "TERMINAL_HUELLA",
+        estado: "DENEGADO",
+        detalle: "Huella óptica desconocida / no registrada (Mejor match: 7.1%)",
+        timestamp: "2026-10-14T21:59:06.627056"
+      },
+      {
+        id: 724,
+        usuario_id: null,
+        nombre_usuario: "Desconocido",
+        dni: "--------",
+        metodo: "HUELLA",
+        terminal: "TERMINAL_HUELLA",
+        estado: "DENEGADO",
+        detalle: "Huella óptica desconocida / no registrada (Mejor match: 8.0%)",
+        timestamp: "2026-10-14T21:58:59.257683"
       },
       {
         id: 723,
@@ -90,8 +112,129 @@ const SEED_API_DATA = {
         metodo: "HUELLA",
         terminal: "TERMINAL_HUELLA",
         estado: "PERMITIDO",
-        detalle: "Huella óptica 1:N identificada con 99.6% (51 minucias ORB)",
-        timestamp: "2026-10-14T21:58:51"
+        detalle: "Huella óptica 1:N (Índice Derecho) identificada con 99.6% (51 minucias ORB)",
+        timestamp: "2026-10-14T21:58:51.821503"
+      },
+      {
+        id: 722,
+        usuario_id: null,
+        nombre_usuario: "Desconocido",
+        dni: "--------",
+        metodo: "HUELLA",
+        terminal: "TERMINAL_HUELLA",
+        estado: "DENEGADO",
+        detalle: "Huella óptica desconocida / no registrada (Mejor match: 23.9%)",
+        timestamp: "2026-10-14T21:58:09.455967"
+      },
+      {
+        id: 721,
+        usuario_id: null,
+        nombre_usuario: "Desconocido",
+        dni: "--------",
+        metodo: "HUELLA",
+        terminal: "TERMINAL_HUELLA",
+        estado: "DENEGADO",
+        detalle: "Huella óptica desconocida / no registrada (Mejor match: 14.4%)",
+        timestamp: "2026-10-14T21:58:01.993596"
+      },
+      {
+        id: 720,
+        usuario_id: null,
+        nombre_usuario: "Desconocido",
+        dni: "--------",
+        metodo: "HUELLA",
+        terminal: "TERMINAL_HUELLA",
+        estado: "DENEGADO",
+        detalle: "Huella óptica desconocida / no registrada (Mejor match: 5.8%)",
+        timestamp: "2026-10-14T21:56:33.946726"
+      },
+      {
+        id: 719,
+        usuario_id: null,
+        nombre_usuario: "Desconocido",
+        dni: "--------",
+        metodo: "HUELLA",
+        terminal: "TERMINAL_HUELLA",
+        estado: "DENEGADO",
+        detalle: "Huella óptica desconocida / no registrada (Mejor match: 10.7%)",
+        timestamp: "2026-10-14T21:56:26.598418"
+      },
+      {
+        id: 718,
+        usuario_id: null,
+        nombre_usuario: "Desconocido",
+        dni: "--------",
+        metodo: "HUELLA",
+        terminal: "TERMINAL_HUELLA",
+        estado: "DENEGADO",
+        detalle: "Huella óptica desconocida / no registrada (Mejor match: 16.0%)",
+        timestamp: "2026-10-14T21:56:19.251803"
+      },
+      {
+        id: 717,
+        usuario_id: null,
+        nombre_usuario: "Desconocido",
+        dni: "--------",
+        metodo: "HUELLA",
+        terminal: "TERMINAL_HUELLA",
+        estado: "DENEGADO",
+        detalle: "Huella óptica desconocida / no registrada (Mejor match: 9.2%)",
+        timestamp: "2026-10-14T21:56:10.415214"
+      },
+      {
+        id: 716,
+        usuario_id: 2,
+        nombre_usuario: "Carlos Rodríguez Peña",
+        dni: "92742345",
+        metodo: "HUELLA",
+        terminal: "TERMINAL_HUELLA",
+        estado: "PERMITIDO",
+        detalle: "Huella óptica 1:N (Índice Derecho) identificada con 99.6% (56 minucias ORB)",
+        timestamp: "2026-10-14T21:56:03.705161"
+      },
+      {
+        id: 715,
+        usuario_id: null,
+        nombre_usuario: "Desconocido",
+        dni: "--------",
+        metodo: "HUELLA",
+        terminal: "TERMINAL_HUELLA",
+        estado: "DENEGADO",
+        detalle: "Huella óptica desconocida / no registrada (Mejor match: 17.6%)",
+        timestamp: "2026-10-14T21:55:56.514058"
+      },
+      {
+        id: 714,
+        usuario_id: null,
+        nombre_usuario: "Desconocido",
+        dni: "--------",
+        metodo: "HUELLA",
+        terminal: "TERMINAL_HUELLA",
+        estado: "DENEGADO",
+        detalle: "Huella óptica desconocida / no registrada (Mejor match: 10.7%)",
+        timestamp: "2026-10-14T21:55:49.085702"
+      },
+      {
+        id: 713,
+        usuario_id: null,
+        nombre_usuario: "Desconocido",
+        dni: "--------",
+        metodo: "HUELLA",
+        terminal: "TERMINAL_HUELLA",
+        estado: "DENEGADO",
+        detalle: "Huella óptica desconocida / no registrada (Mejor match: 5.9%)",
+        timestamp: "2026-10-14T21:55:40.702206"
+      },
+      {
+        id: 712,
+        usuario_id: 1,
+        nombre_usuario: "Kleverd Gabriel Apaza Quispe",
+        dni: "001643199",
+        metodo: "HUELLA",
+        terminal: "TERMINAL_HUELLA",
+        estado: "DENEGADO",
+        detalle: "SUPLANTACION_1A1_HUELLA: Huella no corresponde a Kleverd Gabriel (10.6%)",
+        timestamp: "2026-10-14T21:55:33.467658"
       }
     ]
   }
@@ -109,7 +252,7 @@ self.addEventListener('install', (event) => {
           if (res.ok) {
             await cache.put(url, res.clone());
             if (url.endsWith('.js') || url.endsWith('.css')) {
-              await cache.put(url + '?v=20261017_exceljs_offline_v47', res);
+              await cache.put(url + '?v=20261017_fullsync_offline_v48', res);
             }
           }
         } catch (err) {

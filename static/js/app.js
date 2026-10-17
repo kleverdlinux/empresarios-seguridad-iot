@@ -54,7 +54,7 @@ const AppState = {
 const OfflineStorage = {
     db: null,
     dbName: 'EmpresarioTecOfflineDB',
-    dbVersion: 3,
+    dbVersion: 4,
 
     SEED_TRABAJADORES: [
         {
@@ -107,8 +107,30 @@ const OfflineStorage = {
             metodo: "HUELLA",
             terminal: "TERMINAL_HUELLA",
             estado: "PERMITIDO",
-            detalle: "Huella óptica 1:N identificada con 90.8% (15 minucias ORB)",
-            timestamp: "2026-10-14T21:59:14"
+            detalle: "Huella óptica 1:N (Índice Derecho) identificada con 90.8% (15 minucias ORB)",
+            timestamp: "2026-10-14T21:59:14.002632"
+        },
+        {
+            id: 725,
+            usuario_id: null,
+            nombre_usuario: "Desconocido",
+            dni: "--------",
+            metodo: "HUELLA",
+            terminal: "TERMINAL_HUELLA",
+            estado: "DENEGADO",
+            detalle: "Huella óptica desconocida / no registrada (Mejor match: 7.1%)",
+            timestamp: "2026-10-14T21:59:06.627056"
+        },
+        {
+            id: 724,
+            usuario_id: null,
+            nombre_usuario: "Desconocido",
+            dni: "--------",
+            metodo: "HUELLA",
+            terminal: "TERMINAL_HUELLA",
+            estado: "DENEGADO",
+            detalle: "Huella óptica desconocida / no registrada (Mejor match: 8.0%)",
+            timestamp: "2026-10-14T21:58:59.257683"
         },
         {
             id: 723,
@@ -118,8 +140,129 @@ const OfflineStorage = {
             metodo: "HUELLA",
             terminal: "TERMINAL_HUELLA",
             estado: "PERMITIDO",
-            detalle: "Huella óptica 1:N identificada con 99.6% (51 minucias ORB)",
-            timestamp: "2026-10-14T21:58:51"
+            detalle: "Huella óptica 1:N (Índice Derecho) identificada con 99.6% (51 minucias ORB)",
+            timestamp: "2026-10-14T21:58:51.821503"
+        },
+        {
+            id: 722,
+            usuario_id: null,
+            nombre_usuario: "Desconocido",
+            dni: "--------",
+            metodo: "HUELLA",
+            terminal: "TERMINAL_HUELLA",
+            estado: "DENEGADO",
+            detalle: "Huella óptica desconocida / no registrada (Mejor match: 23.9%)",
+            timestamp: "2026-10-14T21:58:09.455967"
+        },
+        {
+            id: 721,
+            usuario_id: null,
+            nombre_usuario: "Desconocido",
+            dni: "--------",
+            metodo: "HUELLA",
+            terminal: "TERMINAL_HUELLA",
+            estado: "DENEGADO",
+            detalle: "Huella óptica desconocida / no registrada (Mejor match: 14.4%)",
+            timestamp: "2026-10-14T21:58:01.993596"
+        },
+        {
+            id: 720,
+            usuario_id: null,
+            nombre_usuario: "Desconocido",
+            dni: "--------",
+            metodo: "HUELLA",
+            terminal: "TERMINAL_HUELLA",
+            estado: "DENEGADO",
+            detalle: "Huella óptica desconocida / no registrada (Mejor match: 5.8%)",
+            timestamp: "2026-10-14T21:56:33.946726"
+        },
+        {
+            id: 719,
+            usuario_id: null,
+            nombre_usuario: "Desconocido",
+            dni: "--------",
+            metodo: "HUELLA",
+            terminal: "TERMINAL_HUELLA",
+            estado: "DENEGADO",
+            detalle: "Huella óptica desconocida / no registrada (Mejor match: 10.7%)",
+            timestamp: "2026-10-14T21:56:26.598418"
+        },
+        {
+            id: 718,
+            usuario_id: null,
+            nombre_usuario: "Desconocido",
+            dni: "--------",
+            metodo: "HUELLA",
+            terminal: "TERMINAL_HUELLA",
+            estado: "DENEGADO",
+            detalle: "Huella óptica desconocida / no registrada (Mejor match: 16.0%)",
+            timestamp: "2026-10-14T21:56:19.251803"
+        },
+        {
+            id: 717,
+            usuario_id: null,
+            nombre_usuario: "Desconocido",
+            dni: "--------",
+            metodo: "HUELLA",
+            terminal: "TERMINAL_HUELLA",
+            estado: "DENEGADO",
+            detalle: "Huella óptica desconocida / no registrada (Mejor match: 9.2%)",
+            timestamp: "2026-10-14T21:56:10.415214"
+        },
+        {
+            id: 716,
+            usuario_id: 2,
+            nombre_usuario: "Carlos Rodríguez Peña",
+            dni: "92742345",
+            metodo: "HUELLA",
+            terminal: "TERMINAL_HUELLA",
+            estado: "PERMITIDO",
+            detalle: "Huella óptica 1:N (Índice Derecho) identificada con 99.6% (56 minucias ORB)",
+            timestamp: "2026-10-14T21:56:03.705161"
+        },
+        {
+            id: 715,
+            usuario_id: null,
+            nombre_usuario: "Desconocido",
+            dni: "--------",
+            metodo: "HUELLA",
+            terminal: "TERMINAL_HUELLA",
+            estado: "DENEGADO",
+            detalle: "Huella óptica desconocida / no registrada (Mejor match: 17.6%)",
+            timestamp: "2026-10-14T21:55:56.514058"
+        },
+        {
+            id: 714,
+            usuario_id: null,
+            nombre_usuario: "Desconocido",
+            dni: "--------",
+            metodo: "HUELLA",
+            terminal: "TERMINAL_HUELLA",
+            estado: "DENEGADO",
+            detalle: "Huella óptica desconocida / no registrada (Mejor match: 10.7%)",
+            timestamp: "2026-10-14T21:55:49.085702"
+        },
+        {
+            id: 713,
+            usuario_id: null,
+            nombre_usuario: "Desconocido",
+            dni: "--------",
+            metodo: "HUELLA",
+            terminal: "TERMINAL_HUELLA",
+            estado: "DENEGADO",
+            detalle: "Huella óptica desconocida / no registrada (Mejor match: 5.9%)",
+            timestamp: "2026-10-14T21:55:40.702206"
+        },
+        {
+            id: 712,
+            usuario_id: 1,
+            nombre_usuario: "Kleverd Gabriel Apaza Quispe",
+            dni: "001643199",
+            metodo: "HUELLA",
+            terminal: "TERMINAL_HUELLA",
+            estado: "DENEGADO",
+            detalle: "SUPLANTACION_1A1_HUELLA: Huella no corresponde a Kleverd Gabriel (10.6%)",
+            timestamp: "2026-10-14T21:55:33.467658"
         }
     ],
 
@@ -139,6 +282,9 @@ const OfflineStorage = {
                     }
                     if (!db.objectStoreNames.contains('logs_acceso')) {
                         db.createObjectStore('logs_acceso', { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains('logs_incidentes')) {
+                        db.createObjectStore('logs_incidentes', { keyPath: 'id' });
                     }
                     if (!db.objectStoreNames.contains('app_cache')) {
                         db.createObjectStore('app_cache', { keyPath: 'key' });
@@ -233,9 +379,11 @@ const OfflineStorage = {
         if (!listLogs || listLogs.length === 0) {
             listLogs = this.SEED_LOGS;
             await this.guardarLogs(this.SEED_LOGS);
+        } else {
+            listLogs.sort((a, b) => (b.id || 0) - (a.id || 0));
         }
         AppState.todosLosLogs = listLogs;
-        try { localStorage.setItem('cached_logs_accesos', JSON.stringify(listLogs)); } catch(e){}
+        try { localStorage.setItem('cached_logs_accesos', JSON.stringify(listLogs.slice(0, 50))); } catch(e){}
     },
 
     async guardarTrabajadores(lista) {
@@ -273,13 +421,46 @@ const OfflineStorage = {
 
     async guardarLogs(lista) {
         if (!Array.isArray(lista) || lista.length === 0) return;
-        try { localStorage.setItem('cached_logs_accesos', JSON.stringify(lista)); } catch(e){}
+        try { localStorage.setItem('cached_logs_accesos', JSON.stringify(lista.slice(0, 50))); } catch(e){}
         if (!this.db) return;
         try {
             const tx = this.db.transaction('logs_acceso', 'readwrite');
             const store = tx.objectStore('logs_acceso');
             lista.forEach(l => store.put(l));
         } catch(e){}
+    },
+
+    async guardarIncidentes(lista) {
+        if (!Array.isArray(lista) || lista.length === 0) return;
+        try { localStorage.setItem('cached_incidentes', JSON.stringify(lista.slice(0, 50))); } catch(e){}
+        if (!this.db) return;
+        try {
+            const tx = this.db.transaction('logs_incidentes', 'readwrite');
+            const store = tx.objectStore('logs_incidentes');
+            lista.forEach(i => store.put(i));
+        } catch(e){}
+    },
+
+    async obtenerIncidentes() {
+        if (this.db) {
+            try {
+                const list = await new Promise((resolve) => {
+                    const tx = this.db.transaction('logs_incidentes', 'readonly');
+                    const req = tx.objectStore('logs_incidentes').getAll();
+                    req.onsuccess = () => resolve(req.result || []);
+                    req.onerror = () => resolve([]);
+                });
+                if (list && list.length > 0) {
+                    list.sort((a,b) => (b.id || 0) - (a.id || 0));
+                    return list;
+                }
+            } catch(e){}
+        }
+        try {
+            const raw = localStorage.getItem('cached_incidentes');
+            if (raw) return JSON.parse(raw);
+        } catch(e){}
+        return [];
     },
 
     async obtenerLogs() {
@@ -451,6 +632,70 @@ function restaurarEstadoPersistente() {
 // =============================================================================
 let estaConectadoAlServidor = true;
 let fallosConsecutivosPing = 0;
+let sincronizandoCacheEnCurso = false;
+
+async function sincronizarCacheCompletaOnline() {
+    if (sincronizandoCacheEnCurso) return;
+    if (!navigator.onLine) return;
+    try {
+        sincronizandoCacheEnCurso = true;
+        console.log('[Sync Cache] Respaldando base de datos completa para modo offline...');
+
+        // 1. Trabajadores
+        try {
+            const resp = await fetch('/api/trabajadores');
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data.exito && Array.isArray(data.trabajadores) && data.trabajadores.length > 0) {
+                    AppState.trabajadores = data.trabajadores;
+                    await OfflineStorage.guardarTrabajadores(data.trabajadores);
+                    actualizarSelectoresTrabajador(data.trabajadores);
+                    poblarSelectFiltroFacial();
+                }
+            }
+        } catch(e) {}
+
+        // 2. Logs de Auditoría (hasta 1000 eventos reales)
+        try {
+            const resp = await fetch('/api/logs/accesos?limite=1000');
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data.exito && Array.isArray(data.logs) && data.logs.length > 0) {
+                    AppState.todosLosLogs = data.logs;
+                    await OfflineStorage.guardarLogs(data.logs);
+                    console.log(`[Sync Cache] ${data.logs.length} eventos de auditoría sincronizados para uso offline.`);
+                }
+            }
+        } catch(e) {}
+
+        // 3. Incidentes y Alarmas CCTV (hasta 500 eventos reales)
+        try {
+            const resp = await fetch('/api/logs/incidentes?limite=500');
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data.exito && Array.isArray(data.logs) && data.logs.length > 0) {
+                    await OfflineStorage.guardarIncidentes(data.logs);
+                }
+            }
+        } catch(e) {}
+
+        // 4. Estadísticas del Dashboard
+        try {
+            const resp = await fetch('/api/dashboard/stats');
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data.exito && data.stats) {
+                    await OfflineStorage.guardarStats(data.stats);
+                    actualizarUIKPIs(data.stats);
+                }
+            }
+        } catch(e) {}
+    } catch(err) {
+        console.warn('[Sync Cache] Error:', err);
+    } finally {
+        sincronizandoCacheEnCurso = false;
+    }
+}
 
 async function verificarConexionServidor() {
     const pill = document.getElementById('pillEstadoConexion');
@@ -475,8 +720,12 @@ async function verificarConexionServidor() {
 
         if (resp.ok) {
             fallosConsecutivosPing = 0;
+            const acababaDeConectar = !estaConectadoAlServidor;
             estaConectadoAlServidor = true;
             sincronizarColaOffline();
+            if (acababaDeConectar) {
+                sincronizarCacheCompletaOnline();
+            }
             if (pill) {
                 pill.classList.remove('disconnected');
                 pill.classList.add('online');
@@ -530,10 +779,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     manejarRutaHash();
     window.addEventListener('hashchange', manejarRutaHash);
 
+    // Respaldo preventivo inicial de toda la base de datos
+    if (navigator.onLine) {
+        sincronizarCacheCompletaOnline();
+    }
+
     // Monitor dinámico en tiempo real de enlace con el servidor
     verificarConexionServidor();
     setInterval(verificarConexionServidor, 3500);
-    window.addEventListener('online', () => verificarConexionServidor());
+    window.addEventListener('online', () => {
+        verificarConexionServidor();
+        sincronizarCacheCompletaOnline();
+    });
     window.addEventListener('offline', () => aplicarEstadoDesconectado('Modo Offline'));
 
     // Reloj continuo en pantalla
@@ -4030,16 +4287,16 @@ async function cargarTablaLogs(filtro = null) {
     estadoFiltroLogsActual = filtro;
     const tbody = document.getElementById('tablaLogsBody');
 
-    // 1. Mostrar de inmediato logs locales en 0ms
-    let logsPrevios = AppState.todosLosLogs;
+    // 1. Mostrar de inmediato logs locales completos de IndexedDB en 0ms
+    let logsPrevios = await OfflineStorage.obtenerLogs();
+    if (!logsPrevios || logsPrevios.length === 0) {
+        logsPrevios = AppState.todosLosLogs;
+    }
     if (!logsPrevios || logsPrevios.length === 0) {
         try {
             const raw = localStorage.getItem('cached_logs_accesos');
             if (raw) logsPrevios = JSON.parse(raw);
         } catch(e){}
-    }
-    if (!logsPrevios || logsPrevios.length === 0) {
-        logsPrevios = await OfflineStorage.obtenerLogs();
     }
     if (!logsPrevios || logsPrevios.length === 0) {
         logsPrevios = OfflineStorage.SEED_LOGS;
@@ -4059,16 +4316,16 @@ async function cargarTablaLogs(filtro = null) {
         return;
     }
 
-    // 3. Consultar red con timeout de 2000ms
+    // 3. Consultar red con timeout de 2000ms trayendo todos los logs
     try {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 2000);
-        const url = filtro ? `/api/logs/accesos?filtro=${filtro}` : '/api/logs/accesos';
+        const url = filtro ? `/api/logs/accesos?filtro=${filtro}&limite=1000` : '/api/logs/accesos?limite=1000';
         const resp = await fetch(url, { signal: controller.signal });
         clearTimeout(timer);
 
         if (!resp.ok) {
-            recuperarLogsOffline(tbody);
+            await recuperarLogsOffline(tbody);
             return;
         }
         const data = await resp.json();
@@ -4084,15 +4341,18 @@ async function cargarTablaLogs(filtro = null) {
                 renderizarFilasLogs(data.logs, '');
             }
         } else {
-            recuperarLogsOffline(tbody);
+            await recuperarLogsOffline(tbody);
         }
     } catch (e) {
-        recuperarLogsOffline(tbody);
+        await recuperarLogsOffline(tbody);
     }
 }
 
-function recuperarLogsOffline(tbody) {
-    let logsCache = AppState.todosLosLogs || [];
+async function recuperarLogsOffline(tbody) {
+    let logsCache = await OfflineStorage.obtenerLogs();
+    if (!logsCache || logsCache.length === 0) {
+        logsCache = AppState.todosLosLogs || [];
+    }
     if (!logsCache || logsCache.length === 0) {
         try {
             const raw = localStorage.getItem('cached_logs_accesos');
@@ -4673,14 +4933,17 @@ async function exportarExcelNomina() {
 
 async function generarExcelNominaOffline() {
     const ahora = new Date().toLocaleString('es-PE');
-    let trabajadores = (AppState.trabajadores && AppState.trabajadores.length > 0) ? AppState.trabajadores : [];
-    if (trabajadores.length === 0) {
+    let trabajadores = await OfflineStorage.obtenerTrabajadores();
+    if (!trabajadores || trabajadores.length === 0) {
+        trabajadores = (AppState.trabajadores && AppState.trabajadores.length > 0) ? AppState.trabajadores : [];
+    }
+    if (!trabajadores || trabajadores.length === 0) {
         try {
             const raw = localStorage.getItem('cached_trabajadores');
             if (raw) trabajadores = JSON.parse(raw);
         } catch(e) {}
     }
-    if (trabajadores.length === 0) {
+    if (!trabajadores || trabajadores.length === 0) {
         trabajadores = OfflineStorage.SEED_TRABAJADORES;
     }
 
@@ -4758,16 +5021,19 @@ async function exportarExcelAccesos() {
         }
     }
 
-    // Modo Offline: obtener logs de AppState o de localStorage
-    let logsParaExcel = (AppState.todosLosLogs && AppState.todosLosLogs.length > 0) ? AppState.todosLosLogs : [];
-    if (logsParaExcel.length === 0) {
+    // Modo Offline: obtener logs de IndexedDB con máxima prioridad para reflejar la totalidad de registros
+    let logsParaExcel = await OfflineStorage.obtenerLogs();
+    if (!logsParaExcel || logsParaExcel.length === 0) {
+        logsParaExcel = (AppState.todosLosLogs && AppState.todosLosLogs.length > 0) ? AppState.todosLosLogs : [];
+    }
+    if (!logsParaExcel || logsParaExcel.length === 0) {
         try {
             const raw = localStorage.getItem('cached_logs_accesos');
             if (raw) logsParaExcel = JSON.parse(raw);
         } catch(e) {}
     }
 
-    if (logsParaExcel.length === 0) {
+    if (!logsParaExcel || logsParaExcel.length === 0) {
         logsParaExcel = OfflineStorage.SEED_LOGS;
     }
 
@@ -4853,11 +5119,13 @@ async function exportarExcelIncidentes() {
         }
     }
 
-    let incidentesParaExcel = [];
-    try {
-        const raw = localStorage.getItem('cached_incidentes');
-        if (raw) incidentesParaExcel = JSON.parse(raw);
-    } catch(e) {}
+    let incidentesParaExcel = await OfflineStorage.obtenerIncidentes();
+    if (!incidentesParaExcel || incidentesParaExcel.length === 0) {
+        try {
+            const raw = localStorage.getItem('cached_incidentes');
+            if (raw) incidentesParaExcel = JSON.parse(raw);
+        } catch(e) {}
+    }
 
     await generarExcelIncidentesOffline(incidentesParaExcel);
 }
@@ -4939,15 +5207,18 @@ async function exportarFichaTrabajador(usuarioId) {
         }
     }
 
-    // Modo Offline: buscar trabajador en memoria o cache local
-    let todosTrabs = AppState.trabajadores || [];
-    if (todosTrabs.length === 0) {
+    // Modo Offline: buscar trabajador en IndexedDB con máxima resiliencia
+    let todosTrabs = await OfflineStorage.obtenerTrabajadores();
+    if (!todosTrabs || todosTrabs.length === 0) {
+        todosTrabs = AppState.trabajadores || [];
+    }
+    if (!todosTrabs || todosTrabs.length === 0) {
         try {
             const raw = localStorage.getItem('cached_trabajadores');
             if (raw) todosTrabs = JSON.parse(raw);
         } catch(e) {}
     }
-    if (todosTrabs.length === 0) {
+    if (!todosTrabs || todosTrabs.length === 0) {
         todosTrabs = OfflineStorage.SEED_TRABAJADORES;
     }
     const t = todosTrabs.find(item => item.id == usuarioId) || todosTrabs[0];
@@ -4956,15 +5227,18 @@ async function exportarFichaTrabajador(usuarioId) {
         return;
     }
 
-    // Filtrar logs del trabajador desde memoria o cache local
-    let todosLogs = AppState.todosLosLogs || [];
-    if (todosLogs.length === 0) {
+    // Filtrar logs del trabajador desde IndexedDB
+    let todosLogs = await OfflineStorage.obtenerLogs();
+    if (!todosLogs || todosLogs.length === 0) {
+        todosLogs = AppState.todosLosLogs || [];
+    }
+    if (!todosLogs || todosLogs.length === 0) {
         try {
             const rawL = localStorage.getItem('cached_logs_accesos');
             if (rawL) todosLogs = JSON.parse(rawL);
         } catch(e) {}
     }
-    if (todosLogs.length === 0) {
+    if (!todosLogs || todosLogs.length === 0) {
         todosLogs = OfflineStorage.SEED_LOGS;
     }
     const logsUsuario = todosLogs.filter(l => l.usuario_id == t.id || l.dni == t.dni);
@@ -5065,15 +5339,18 @@ async function exportarCsvLogs() {
         }
     }
 
-    // Modo Offline CSV
-    let logs = (AppState.todosLosLogs && AppState.todosLosLogs.length > 0) ? AppState.todosLosLogs : [];
-    if (logs.length === 0) {
+    // Modo Offline CSV: consultar IndexedDB con máxima prioridad
+    let logs = await OfflineStorage.obtenerLogs();
+    if (!logs || logs.length === 0) {
+        logs = (AppState.todosLosLogs && AppState.todosLosLogs.length > 0) ? AppState.todosLosLogs : [];
+    }
+    if (!logs || logs.length === 0) {
         try {
             const raw = localStorage.getItem('cached_logs_accesos');
             if (raw) logs = JSON.parse(raw);
         } catch(e) {}
     }
-    if (logs.length === 0) logs = OfflineStorage.SEED_LOGS;
+    if (!logs || logs.length === 0) logs = OfflineStorage.SEED_LOGS;
 
     let csvContent = "\uFEFFID,Fecha_Hora,DNI,Usuario,Metodo,Terminal,Estado,Detalle\n";
     logs.forEach(l => {
