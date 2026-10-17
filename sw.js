@@ -5,7 +5,7 @@
 // y sirva la aplicacion, camara y reportes Excel desde la memoria local.
 // =============================================================================
 
-const CACHE_NAME = 'empresariotec-pwa-v42';
+const CACHE_NAME = 'empresariotec-pwa-v46';
 
 const CRITICAL_ASSETS = [
   '/',
@@ -15,29 +15,117 @@ const CRITICAL_ASSETS = [
   '/static/js/sonidos.js',
   '/static/js/sweetalert2.all.min.js',
   '/static/js/webauthn_biometria.js',
-  '/static/js/xlsx.full.min.js',
+  '/static/js/exceljs.min.js',
   '/static/manifest.json'
 ];
+
+// Datos semilla de contingencia para modo offline absoluto en primera apertura
+const SEED_API_DATA = {
+  '/api/trabajadores': {
+    exito: true,
+    offline: true,
+    trabajadores: [
+      {
+        id: 1,
+        dni: "001643199",
+        nombres: "Kleverd Gabriel",
+        apellidos: "Apaza Quispe",
+        cargo: "Administrador de Seguridad IoT",
+        departamento: "Tecnología y Operaciones",
+        estado: "ACTIVO",
+        fecha_registro: "2026-10-13T12:56:40",
+        foto_perfil: null,
+        huella_registrada: 1,
+        rostro_registrado: 1,
+        fotos_entrenadas: 3
+      },
+      {
+        id: 2,
+        dni: "92742345",
+        nombres: "Carlos",
+        apellidos: "Rodríguez Peña",
+        cargo: "Administrador de equipos",
+        departamento: "Operaciones",
+        estado: "ACTIVO",
+        fecha_registro: "2026-10-13T17:28:37",
+        foto_perfil: null,
+        huella_registrada: 1,
+        rostro_registrado: 1,
+        fotos_entrenadas: 3
+      }
+    ]
+  },
+  '/api/dashboard/stats': {
+    exito: true,
+    offline: true,
+    stats: {
+      total_trabajadores: 2,
+      accesos_permitidos: 270,
+      accesos_denegados: 456,
+      alertas_criticas: 489,
+      rostros_activos: 2,
+      huellas_activas: 2
+    }
+  },
+  '/api/logs/accesos': {
+    exito: true,
+    offline: true,
+    logs: [
+      {
+        id: 726,
+        usuario_id: 2,
+        nombre_usuario: "Carlos Rodríguez Peña",
+        dni: "92742345",
+        metodo: "HUELLA",
+        terminal: "TERMINAL_HUELLA",
+        estado: "PERMITIDO",
+        detalle: "Huella óptica 1:N identificada con 90.8% (15 minucias ORB)",
+        timestamp: "2026-10-14T21:59:14"
+      },
+      {
+        id: 723,
+        usuario_id: 1,
+        nombre_usuario: "Kleverd Gabriel Apaza Quispe",
+        dni: "001643199",
+        metodo: "HUELLA",
+        terminal: "TERMINAL_HUELLA",
+        estado: "PERMITIDO",
+        detalle: "Huella óptica 1:N identificada con 99.6% (51 minucias ORB)",
+        timestamp: "2026-10-14T21:58:51"
+      }
+    ]
+  }
+};
 
 // 1. INSTALACIÓN: Pre-cachear todos los activos estáticos críticos de forma resiliente
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      console.log('[SW] Pre-cacheando recursos para operacion Offline total...');
+      console.log('[SW] Pre-cacheando recursos y semilla para operacion Offline total...');
       const fetchPromises = CRITICAL_ASSETS.map(async (url) => {
         try {
           const res = await fetch(url, { cache: 'reload' });
           if (res.ok) {
             await cache.put(url, res.clone());
             if (url.endsWith('.js') || url.endsWith('.css')) {
-              await cache.put(url + '?v=20261017_excel_perfect_cols_v42', res);
+              await cache.put(url + '?v=20261017_offline_db_styled_v45', res);
             }
           }
         } catch (err) {
           console.warn('[SW] No se pudo pre-cachear:', url, err);
         }
       });
+
+      // Pre-cargar respuestas JSON semilla para /api/* en cache
+      for (const [endpoint, data] of Object.entries(SEED_API_DATA)) {
+        const jsonResp = new Response(JSON.stringify(data), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json; charset=utf-8' }
+        });
+        await cache.put(endpoint, jsonResp);
+      }
+
       await Promise.all(fetchPromises);
     })
   );
@@ -80,10 +168,10 @@ self.addEventListener('fetch', (event) => {
           if (cached) return cached;
         }
 
-        // Si está online, intentar red con timeout rápido (2.5 segundos)
+        // Si está online, intentar red con timeout rápido (1.8 segundos)
         try {
           const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 2500);
+          const timer = setTimeout(() => controller.abort(), 1800);
           const netResp = await fetch(req, { signal: controller.signal });
           clearTimeout(timer);
 
@@ -136,7 +224,6 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(req, { ignoreSearch: true }).then((cached) => {
         if (cached) {
-          // Si estamos online, actualizar en segundo plano sin bloquear
           if (navigator.onLine) {
             fetch(req).then((net) => {
               if (net && net.status === 200) {
@@ -147,7 +234,6 @@ self.addEventListener('fetch', (event) => {
           return cached;
         }
 
-        // Si no estaba en caché, buscar en red
         return fetch(req).then((net) => {
           if (net && net.status === 200) {
             const clone = net.clone();
@@ -155,7 +241,6 @@ self.addEventListener('fetch', (event) => {
           }
           return net;
         }).catch(async () => {
-          // Búsqueda por pathname base
           const fallback = await caches.match(url.pathname, { ignoreSearch: true });
           if (fallback) return fallback;
           return new Response('', { status: 404, statusText: 'Offline Resource Not Found' });
@@ -166,14 +251,82 @@ self.addEventListener('fetch', (event) => {
   }
 
   // C) PETICIONES API (/api/*)
-  // Network First con fallback controlado a JSON offline
+  // Estrategia: Network con timeout de 1.5s -> Si no responde o está offline, Cache-First en 0ms
   if (url.pathname.startsWith('/api/')) {
+    if (req.method === 'GET') {
+      event.respondWith(
+        (async () => {
+          // 1. Si el cliente no tiene internet, responder de inmediato con la caché en 0ms
+          if (!navigator.onLine) {
+            const cached = await caches.match(req, { ignoreSearch: true })
+                        || await caches.match(url.pathname, { ignoreSearch: true });
+            if (cached) return cached;
+
+            if (SEED_API_DATA[url.pathname]) {
+              return new Response(JSON.stringify(SEED_API_DATA[url.pathname]), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json; charset=utf-8' }
+              });
+            }
+          }
+
+          // 2. Si dice estar online, intentar fetch con timeout estricto de 1.5 segundos
+          try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 1500);
+            const netResp = await fetch(req, { signal: controller.signal });
+            clearTimeout(timer);
+
+            if (netResp && netResp.status === 200) {
+              const clone = netResp.clone();
+              caches.open(CACHE_NAME).then((c) => {
+                c.put(req, clone.clone());
+                c.put(url.pathname, clone);
+              });
+              return netResp;
+            }
+          } catch (e) {
+            // Timeout o error de red
+          }
+
+          // 3. Fallback a caché
+          const cached = await caches.match(req, { ignoreSearch: true })
+                      || await caches.match(url.pathname, { ignoreSearch: true });
+          if (cached) {
+            return cached;
+          }
+
+          // 4. Fallback a datos semilla específicos del endpoint
+          if (SEED_API_DATA[url.pathname]) {
+            return new Response(JSON.stringify(SEED_API_DATA[url.pathname]), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json; charset=utf-8' }
+            });
+          }
+
+          // 5. Respuesta JSON offline de emergencia garantizada
+          return new Response(JSON.stringify({
+            exito: true,
+            offline: true,
+            trabajadores: SEED_API_DATA['/api/trabajadores'].trabajadores,
+            logs: SEED_API_DATA['/api/logs/accesos'].logs,
+            stats: SEED_API_DATA['/api/dashboard/stats'].stats
+          }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json; charset=utf-8' }
+          });
+        })()
+      );
+      return;
+    }
+
+    // POST / PUT / DELETE sin conexión
     event.respondWith(
       fetch(req).catch(() => {
         return new Response(JSON.stringify({
           exito: false,
           offline: true,
-          mensaje: 'Servidor fuera de línea temporalmente. Operando en modo local.'
+          mensaje: 'Servidor fuera de línea. Operación encolada o simulada en almacenamiento local.'
         }), {
           status: 503,
           headers: { 'Content-Type': 'application/json; charset=utf-8' }

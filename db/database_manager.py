@@ -348,9 +348,9 @@ class DatabaseManager:
     # AUDITORIA, ACCESOS E INCIDENTES
     # =========================================================================
 
-    def registrar_acceso(self, usuario_id, nombre_usuario, dni, metodo, terminal, estado, detalle=""):
+    def registrar_acceso(self, usuario_id, nombre_usuario, dni, metodo, terminal, estado, detalle="", timestamp=None):
         """Registra un evento de acceso en el log auditable."""
-        ahora = datetime.now().isoformat()
+        ahora = timestamp or datetime.now().isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -385,9 +385,9 @@ class DatabaseManager:
             """, (usuario_id, limite))
             return [dict(f) for f in cursor.fetchall()]
 
-    def registrar_incidente(self, tipo_sensor, nivel_alerta, descripcion):
+    def registrar_incidente(self, tipo_sensor, nivel_alerta, descripcion, timestamp=None):
         """Registra una anomalia o alerta en la tabla de incidentes."""
-        ahora = datetime.now().isoformat()
+        ahora = timestamp or datetime.now().isoformat()
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""

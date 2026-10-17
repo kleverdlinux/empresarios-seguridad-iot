@@ -436,6 +436,46 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
             return
 
         # =====================================================================
+        # 2.1 SINCRONIZACION OFFLINE (IndexedDB / SQLite Local a Servidor)
+        # =====================================================================
+        if ruta == '/api/sincronizar_offline':
+            registros = datos.get('registros', [])
+            sincronizados = 0
+            for r in registros:
+                try:
+                    tipo = r.get('tipo', 'acceso')
+                    ts = r.get('timestamp')
+                    if tipo == 'acceso':
+                        db.registrar_acceso(
+                            usuario_id=r.get('usuario_id'),
+                            nombre_usuario=r.get('nombre_usuario', 'Desconocido'),
+                            dni=r.get('dni', ''),
+                            metodo=r.get('metodo', 'OFFLINE'),
+                            terminal=r.get('terminal', 'offline'),
+                            estado=r.get('estado', 'PERMITIDO'),
+                            detalle=r.get('detalle', 'Marcación offline sincronizada'),
+                            timestamp=ts
+                        )
+                        sincronizados += 1
+                    elif tipo == 'incidente':
+                        db.registrar_incidente(
+                            tipo_sensor=r.get('tipo_sensor', 'OFFLINE_EVENT'),
+                            nivel_alerta=r.get('nivel_alerta', 'INFO'),
+                            descripcion=r.get('descripcion', 'Incidente registrado en modo offline'),
+                            timestamp=ts
+                        )
+                        sincronizados += 1
+                except Exception as ex_sync:
+                    print(f"[SYNC_OFFLINE] Error registrando fila: {ex_sync}")
+
+            self.responder_json(200, {
+                'exito': True,
+                'sincronizados': sincronizados,
+                'mensaje': f'Se sincronizaron con éxito {sincronizados} registros con SQLite central.'
+            })
+            return
+
+        # =====================================================================
         # 3. GESTION DE TRABAJADORES
         # =====================================================================
         if ruta == '/api/trabajadores':

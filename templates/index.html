@@ -6,7 +6,7 @@
   <title>EMPRESARIOTEC S.A. | Sistema de Seguridad Biométrico IoT</title>
   
   <!-- Estilos del Sistema (Modo Claro Oficial) -->
-  <link rel="stylesheet" href="/static/css/style.css?v=20261017_excel_perfect_cols_v42">
+  <link rel="stylesheet" href="/static/css/style.css?v=20261017_exceljs_offline_v46">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#0284c7">
   
@@ -1423,23 +1423,20 @@
 
   </main>
 
-  <!-- Scripts del Sistema -->
-  <script src="/static/js/xlsx.full.min.js"></script>
-  <script src="/static/js/sonidos.js?v=20261017_excel_perfect_cols_v42"></script>
-  <script src="/static/js/webauthn_biometria.js?v=20261017_excel_perfect_cols_v42"></script>
-  <script src="/static/js/app.js?v=20261017_excel_perfect_cols_v42"></script>
+  <script src="/static/js/exceljs.min.js"></script>
+  <script src="/static/js/sonidos.js?v=20261017_exceljs_offline_v46"></script>
+  <script src="/static/js/webauthn_biometria.js?v=20261017_exceljs_offline_v46"></script>
+  <script src="/static/js/app.js?v=20261017_exceljs_offline_v46"></script>
 
-  <!-- PWA Service Worker (Evita la pantalla del dinosaurio sin internet) -->
+  <!-- PWA Service Worker (Modo Offline Total Anti-Dinosaurio) -->
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' })
-          .then(reg => {
-            console.log('[PWA] Service Worker activo para modo Offline total', reg.scope);
-            if (reg.update) reg.update();
-          })
-          .catch(err => console.warn('[PWA] Service Worker:', err));
-      });
+      navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        .then(reg => {
+          console.log('[PWA] Service Worker activo para modo Offline total', reg.scope);
+          if (reg.update) reg.update();
+        })
+        .catch(err => console.warn('[PWA] Service Worker:', err));
     }
   </script>
 
