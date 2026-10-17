@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EMPRESARIOTEC S.A. | Sistema de Seguridad Biométrico IoT</title>
+  
+  <!-- Estilos del Sistema (Modo Claro Oficial) -->
+  <link rel="stylesheet" href="/static/css/style.css?v=20261017_offline_realtime_v38">
+  
+  <!-- SweetAlert2 Offline Bundle -->
+  <script src="/static/js/sweetalert2.all.min.js"></script>
+</head>
+<body class="is-login-screen">
+
+  <!-- =========================================================================
+       BARRA SUPERIOR CORPORATIVA (Oculta en Login, visible en módulos autenticados)
+       ========================================================================= -->
+  <header class="app-header">
+    <div class="header-container">
+      
+      <div class="header-left-group">
+        <!-- Botón Menú Hamburguesa al lado del nombre de la empresa -->
+        <button id="btnToggleHamburger" class="btn-hamburger" onclick="alternarDrawerMenu(event)" title="Menú del Sistema">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+
+        <div class="brand-wrapper" onclick="navegarTabAdminDesdeDrawer('inicio')" title="Ir al Inicio (Dashboard)">
+          <div class="brand-badge">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <span class="brand-title">EMPRESARIOTEC S.A.</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Estado de Conexión Dinámico en Tiempo Real (Online vs Modo Offline) -->
+        <span class="status-pill-compact online" id="pillEstadoConexion" title="Servidor Central Activo • En Línea">
+          <span class="status-dot"></span>
+          <span id="txtEstadoConexionPill">Online</span>
+        </span>
+
+        <!-- Reloj Flip Digital Retro en Tiempo Real -->
+        <div class="flip-clock-badge" title="Reloj en Tiempo Real">
+          <div class="flip-unit"><span id="flipHours">--</span><div class="flip-slit"></div></div>
+          <span class="flip-sep">:</span>
+          <div class="flip-unit"><span id="flipMinutes">--</span><div class="flip-slit"></div></div>
+          <span class="flip-sep">:</span>
+          <div class="flip-unit"><span id="flipSeconds">--</span><div class="flip-slit"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       DRAWER VERTICAL OFF-CANVAS (MENÚ HAMBURGUESA PARA PC Y MÓVIL)
+       ========================================================================= -->
+  <div id="drawerBackdrop" class="drawer-backdrop" onclick="cerrarDrawerMenu()"></div>
+
+  <aside id="appDrawerMenu" class="app-drawer-panel" aria-label="Menú Vertical">
+    <div class="drawer-header">
+      <div class="drawer-brand">
+        <div class="brand-badge">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        </div>
+        <div>
+          <h3>EMPRESARIOTEC S.A.</h3>
+          <small>Sistema Biométrico IoT</small>
+        </div>
+      </div>
+      <button class="btn-drawer-close" onclick="cerrarDrawerMenu()" title="Cerrar Menú">✕</button>
+    </div>
+
+    <div class="drawer-body">
+      <!-- Tarjeta de Estado del Sistema -->
+      <div class="drawer-info-box">
+        <div class="drawer-status-line">
+          <span class="status-dot"></span>
+          <strong id="drawerStatusText">SQLite Local Activo (Offline)</strong>
+        </div>
+        <div class="drawer-user-line">
+          <span>Usuario: Administrador Maestro</span>
+        </div>
+      </div>
+
+      <!-- Enlaces de Navegación Vertical con Submenús -->
+      <div class="drawer-nav-section">
+        <div class="drawer-section-title">PANEL DE CONTROL</div>
+        <button class="drawer-item" id="drawerBtnInicio" onclick="navegarTabAdminDesdeDrawer('inicio')">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          <span>Inicio (Dashboard Principal)</span>
+        </button>
+      </div>
+
+      <div class="drawer-nav-section">
+        <div class="drawer-section-title">PANEL DE ADMINISTRACIÓN MAESTRO</div>
+        <div class="drawer-submenu-group">
+          <button class="drawer-subitem" id="drawerBtnTrabajadores" onclick="navegarTabAdminDesdeDrawer('trabajadores')">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+            <span>Gestión de Personal</span>
+          </button>
+          <button class="drawer-subitem" id="drawerBtnReportes" onclick="navegarTabAdminDesdeDrawer('reportes')">
+            <svg class="icon" style="color: #16a34a;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+            <span>Centro de Reportes Excel</span>
+            <span class="badge-sublink-xls">.XLSX</span>
+          </button>
+          <button class="drawer-subitem" id="drawerBtnPasswords" onclick="navegarTabAdminDesdeDrawer('passwords')">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span>Contraseñas de las 3 Terminales</span>
+          </button>
+          <button class="drawer-subitem" id="drawerBtnLogs" onclick="navegarTabAdminDesdeDrawer('logs')">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span>Auditoría en Vivo</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="drawer-nav-section">
+        <div class="drawer-section-title">TERMINALES BIOMÉTRICAS & MONITOREO</div>
+        <div class="drawer-submenu-group">
+          <button class="drawer-subitem" onclick="navegarTerminalDesdeDrawer('facial')">
+            <svg class="icon icon-facial" viewBox="0 0 24 24"><path d="M2 7V5a2 2 0 0 1 2-2h3"></path><path d="M17 3h3a2 2 0 0 1 2 2v2"></path><path d="M2 17v2a2 2 0 0 0 2 2h3"></path><path d="M17 21h3a2 2 0 0 0 2-2v-2"></path><path d="M7.5 10c0-2.8 2-4.5 4.5-4.5s4.5 1.7 4.5 4.5"></path><path d="M7.5 10.2c.8-.5 2.2-1 4.5-1s3.7.5 4.5 1"></path><path d="M7 10a1.2 1.2 0 0 0 0 2.2c.4 1.8 2.3 3.3 5 3.3s4.6-1.5 5-3.3a1.2 1.2 0 0 0 0-2.2"></path><path d="M5.5 20c.5-2.5 3-3.8 6.5-3.8s6 1.3 6.5 3.8"></path></svg>
+            <span>Terminal Facial (OpenCV LBPH)</span>
+          </button>
+          <button class="drawer-subitem" onclick="navegarTerminalDesdeDrawer('huella')">
+            <svg class="icon icon-huella" viewBox="0 0 24 24"><path d="M4.5 14C4.5 8.5 7.8 3.5 12 3.5s7.5 5 7.5 10.5c0 2-.5 4-1 5.5"></path><path d="M7 15.2C7 10.5 9.2 6.5 12 6.5s5 4 5 8.7c0 1.8-.4 3.3-.8 4.3"></path><path d="M9.2 16.5C9.2 12.8 10.4 9.2 12 9.2s2.8 3.6 2.8 7.3"></path><path d="M11 17.8c0-2.8.4-5.8 1-5.8s1 3 1 5.8"></path><path d="M5.5 18.5c.8 1.4 1.8 2.3 3.2 2.8"></path><path d="M13.8 20.8c.8-.4 1.5-.9 2.1-1.6"></path></svg>
+            <span>Terminal Huella (Aratek AS608)</span>
+          </button>
+          <button class="drawer-subitem" onclick="navegarTerminalDesdeDrawer('cctv')">
+            <svg class="icon icon-cctv" viewBox="0 0 24 24"><rect x="2" y="11" width="2" height="8" rx="1"></rect><path d="M4 15h4v-2.5a1.5 1.5 0 0 1 1.5-1.5h1.5"></path><path d="M7 6l12-3a1.5 1.5 0 0 1 1.8 1.1l1.2 4.2a1.5 1.5 0 0 1-1.1 1.8L9 12"></path><path d="M7 6.8v3a2 2 0 0 0 1.2 1.8l7 2.4a2 2 0 0 0 2.2-.6l2-2.5"></path><circle cx="16.5" cy="9.5" r="1.6"></circle></svg>
+            <span>CCTV Centinela Videovigilancia</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pie del Drawer: Botón Salir -->
+    <div class="drawer-footer">
+      <button id="btnDrawerCerrarSesion" class="btn-drawer-logout" onclick="cerrarSesionDesdeDrawer()">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        <span>Cerrar Sesión (Salir)</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- =========================================================================
+       CONTENIDO PRINCIPAL (SPA)
+       ========================================================================= -->
+  <main class="main-wrapper">
+
+    <!-- =====================================================================
+         VISTA 1: LOGIN CORPORATIVO MODERNO DE VERDAD
+         ===================================================================== -->
+    <section id="view-portal" class="view-section active">
+      <div class="login-view-wrapper">
+        <div class="login-card-master">
+          
+          <div class="login-card-header">
+            <div class="login-brand-icon">
+              <!-- Escudo de Seguridad Tecnológico -->
+              <svg class="icon icon-lg" viewBox="0 0 24 24">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <h2>EMPRESARIOTEC S.A.</h2>
+            <p>Plataforma de Control Biométrico & Gestión IoT</p>
+          </div>
+
+          <!-- Selector Segmentado de Rol / Terminal Destino -->
+          <div class="auth-segmented-nav">
+            <button id="btnRoleAdmin" class="auth-nav-btn active" onclick="seleccionarRolLogin('admin')">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle></svg>
+              <span>Admin</span>
+            </button>
+            <button id="btnRoleFacial" class="auth-nav-btn" onclick="seleccionarRolLogin('facial')">
+              <svg class="icon icon-facial" viewBox="0 0 24 24"><path d="M2 7V5a2 2 0 0 1 2-2h3"></path><path d="M17 3h3a2 2 0 0 1 2 2v2"></path><path d="M2 17v2a2 2 0 0 0 2 2h3"></path><path d="M17 21h3a2 2 0 0 0 2-2v-2"></path><path d="M7.5 10c0-2.8 2-4.5 4.5-4.5s4.5 1.7 4.5 4.5"></path><path d="M7.5 10.2c.8-.5 2.2-1 4.5-1s3.7.5 4.5 1"></path><path d="M7 10a1.2 1.2 0 0 0 0 2.2c.4 1.8 2.3 3.3 5 3.3s4.6-1.5 5-3.3a1.2 1.2 0 0 0 0-2.2"></path><path d="M5.5 20c.5-2.5 3-3.8 6.5-3.8s6 1.3 6.5 3.8"></path></svg>
+              <span>Facial</span>
+            </button>
+            <button id="btnRoleHuella" class="auth-nav-btn" onclick="seleccionarRolLogin('huella')">
+              <svg class="icon icon-huella" viewBox="0 0 24 24"><path d="M4.5 14C4.5 8.5 7.8 3.5 12 3.5s7.5 5 7.5 10.5c0 2-.5 4-1 5.5"></path><path d="M7 15.2C7 10.5 9.2 6.5 12 6.5s5 4 5 8.7c0 1.8-.4 3.3-.8 4.3"></path><path d="M9.2 16.5C9.2 12.8 10.4 9.2 12 9.2s2.8 3.6 2.8 7.3"></path><path d="M11 17.8c0-2.8.4-5.8 1-5.8s1 3 1 5.8"></path><path d="M5.5 18.5c.8 1.4 1.8 2.3 3.2 2.8"></path><path d="M13.8 20.8c.8-.4 1.5-.9 2.1-1.6"></path></svg>
+              <span>Huella</span>
+            </button>
+            <button id="btnRoleCctv" class="auth-nav-btn" onclick="seleccionarRolLogin('cctv')">
+              <svg class="icon icon-cctv" viewBox="0 0 24 24"><rect x="2" y="11" width="2" height="8" rx="1"></rect><path d="M4 15h4v-2.5a1.5 1.5 0 0 1 1.5-1.5h1.5"></path><path d="M7 6l12-3a1.5 1.5 0 0 1 1.8 1.1l1.2 4.2a1.5 1.5 0 0 1-1.1 1.8L9 12"></path><path d="M7 6.8v3a2 2 0 0 0 1.2 1.8l7 2.4a2 2 0 0 0 2.2-.6l2-2.5"></path><circle cx="16.5" cy="9.5" r="1.6"></circle></svg>
+              <span>CCTV</span>
+            </button>
+          </div>
+
+          <!-- Formulario de Autenticación Moderno -->
+          <div class="login-card-body">
+            <div class="auth-form-title-badge">
+              <span id="loginTitleModulo">Panel de Administración Maestro</span>
+              <small id="loginSubtitleModulo">Nivel: Administrador</small>
+            </div>
+
+            <form id="formLoginMaster" onsubmit="procesarLoginModerno(event)">
+              
+              <!-- Campo Usuario (Solo para Administrador) -->
+              <div id="loginGroupUsuario" class="auth-input-group">
+                <label>Nombre de Usuario</label>
+                <div class="auth-input-field-wrapper">
+                  <span class="auth-input-icon">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  </span>
+                  <input type="text" id="loginInputUsuario" class="auth-input-control" value="admin" placeholder="Usuario administrador" autocomplete="username">
+                </div>
+              </div>
+
+              <!-- Campo Contraseña con Toggle de Visibilidad -->
+              <div class="auth-input-group">
+                <label id="loginLabelPassword">Contraseña de Administrador</label>
+                <div class="auth-input-field-wrapper">
+                  <span class="auth-input-icon">
+                    <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                  </span>
+                  <input type="password" id="loginInputPassword" class="auth-input-control" placeholder="••••••••" required autocomplete="current-password">
+                  <button type="button" class="btn-eye-toggle" onclick="alternarVisibilidadPassword('loginInputPassword', this)" title="Mostrar/Ocultar Contraseña">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" id="btnLoginSubmit" class="btn-auth-submit">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+                <span>Acceder al Sistema</span>
+              </button>
+
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         VISTA 2: TERMINAL DE RECONOCIMIENTO FACIAL (Tótem Stand Vertical)
+         ===================================================================== -->
+    <section id="view-facial" class="view-section">
+      <div class="terminal-facial-container">
+        
+        <!-- Barra de estado superior del dispositivo físico -->
+        <div class="facial-device-header">
+          <div class="facial-device-title">
+            <button class="btn btn-outline btn-sm" onclick="volverDeTerminal()" title="Regresar">
+              <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <span>Terminal Biométrico Facial</span>
+          </div>
+          <span class="status-pill online">
+            <span class="status-dot"></span>
+            <span>Sensor Activo</span>
+          </span>
+        </div>
+
+        <!-- Barra de Selección de Modo y Filtro de Colaborador (1:1 o 1:N) -->
+        <div class="facial-mode-selector-bar" style="background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 0.65rem 1rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; font-weight: 700; color: #334155;">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>Filtro de Verificación Facial:</span>
+            </div>
+            <select id="selectFiltroFacialUsuario" class="form-control form-control-sm" style="max-width: 290px; font-weight: 600; font-size: 0.82rem;" oninput="cambiarFiltroFacialUsuario(this.value)" onchange="cambiarFiltroFacialUsuario(this.value)" aria-label="Filtro de trabajador para verificación facial">
+              <option value="">Modo General: Identificar automáticamente (1:N)</option>
+              <!-- Opciones dinámicas de trabajadores -->
+            </select>
+          </div>
+          <div id="badgeFiltroFacialActivo" style="display: none; margin-top: 0.45rem; font-size: 0.76rem; background: #e0f2fe; color: #0369a1; padding: 0.4rem 0.75rem; border-radius: 6px; font-weight: 700; align-items: center; justify-content: space-between;">
+            <span id="txtFiltroFacialActivo">Verificación 1:1 Estricta Activa</span>
+            <button type="button" style="background: none; border: none; color: #0369a1; font-weight: 800; cursor: pointer; padding: 0 0.3rem;" onclick="limpiarFiltroFacialUsuario()" title="Volver a Modo Automático">Quitar Filtro</button>
+          </div>
+        </div>
+
+        <!-- Barra LED de estado físico superior (Azul / Verde / Rojo) -->
+        <div id="facialLedBar" class="facial-led-bar scanning"></div>
+
+        <!-- Viewfinder de la Cámara Vertical (Idéntico a la imagen del PDF) -->
+        <div class="facial-viewfinder-wrapper">
+          <video id="videoFacialFeed" autoplay playsinline muted></video>
+
+          <!-- Overlay HUD con retícula biométrica de escaneo -->
+          <div class="facial-hud-overlay">
+            <div class="facial-instruction-pill">
+              <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+              <span id="facialInstructionText">Posicione su rostro dentro del marco</span>
+            </div>
+
+            <!-- Marco de alineación facial -->
+            <div id="facialBracket" class="facial-target-bracket">
+              <span class="facial-scanline"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Banner de Veredicto Inferior (Exacto al diseño de la imagen del PDF) -->
+        <div id="facialVerdictBanner" class="facial-verdict-banner">
+          <div class="verdict-info">
+            <div class="verdict-avatar">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <div class="verdict-text">
+              <h4>Buscando Trabajador...</h4>
+              <p>Sistema LBPH procesando fotogramas</p>
+            </div>
+          </div>
+          <div class="verdict-badge">
+            <span>En Espera</span>
+          </div>
+        </div>
+
+        <!-- Barra de Controles de la Terminal -->
+        <div class="facial-controls-bar">
+          <button class="btn btn-outline btn-sm" onclick="alternarCamaraFacial()">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M1 4v6h6m16 10v-6h-6"></path><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+            Girar Cámara
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="iniciarTerminalFacial()">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            Reiniciar Sensor
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="volverDeTerminal()">
+            Salir
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         VISTA 3: TERMINAL BIOMETRICO DACTILAR (Lectura y Verificación Real)
+         ===================================================================== -->
+    <section id="view-huella" class="view-section fp-fullscreen-kiosk-view">
+      
+      <!-- Video en vivo de la cámara a pantalla completa nativa -->
+      <video id="videoFeedHuellaOptica" class="fp-kiosk-video" autoplay playsinline muted></video>
+
+      <!-- Barra Superior Flotante Kiosco -->
+      <header class="fp-kiosk-top-header">
+        <button type="button" class="btn-kiosk-action" onclick="volverDeTerminal()" title="Regresar al Portal">
+          <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>Volver</span>
+        </button>
+
+        <div class="fp-kiosk-selector-wrap">
+          <select id="selectFiltroHuellaUsuario" class="form-control-kiosk" onchange="seleccionarModoHuellaTerminal(this.value)" aria-label="Filtro de trabajador para verificación de huella dactilar">
+            <option value="">Modo General: Identificar automáticamente (1:N)</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 0.4rem;">
+          <button type="button" class="btn-kiosk-action" onclick="alternarCamaraScannerHuella()" title="Alternar Cámara Frontal / Trasera">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            <span id="txtModoCamaraHuella">Trasera</span>
+          </button>
+          <button type="button" id="btnToggleFlashHuella" class="btn-kiosk-action" onclick="alternarFlashLinternaHuella()" title="Activar / Apagar Flash">
+            <svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            <span>Flash</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Centro: Visor y Recuadro Dinámico de Detección de Yema Dactilar -->
+      <div id="fpKioskCenterReticle" class="fp-kiosk-center-reticle" style="display: none;">
+        <div id="dynamicBoundingBoxTerminal" class="dynamic-finger-box searching">
+          <div class="corner-bracket tl"></div>
+          <div class="corner-bracket tr"></div>
+          <div class="corner-bracket bl"></div>
+          <div class="corner-bracket br"></div>
+          <span class="box-tag" id="tagBoundingBoxTerminal">BUSCANDO YEMA...</span>
+        </div>
+      </div>
+
+      <!-- Barra Inferior Flotante Kiosco -->
+      <footer class="fp-kiosk-bottom-footer">
+        
+        <!-- Badge Dinámico de Detección del Dedo -->
+        <div id="badgeGuiaEncuadre5cm" class="hud-distance-badge" style="display: none;">
+          Presente su dedo frente a la cámara (a 5-7 cm)
+        </div>
+
+        <div id="txtAutoCaptureHintTerminal" style="display: none; font-size: 0.76rem; color: #cbd5e1; font-weight: 700; margin-bottom: 0.65rem; text-shadow: 0 1px 4px rgba(0,0,0,0.8);">
+          El recuadro verde seguirá su yema automáticamente
+        </div>
+
+        <!-- Barra de Progreso de Análisis Dactilar -->
+        <div id="fpTerminalProgressBarContainer" style="display: none; width: 100%; max-width: 340px; margin-bottom: 0.75rem; background: rgba(15, 23, 42, 0.90); padding: 0.5rem 0.85rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25);">
+          <div style="display: flex; justify-content: space-between; font-size: 0.76rem; font-weight: 700; color: #4ade80; margin-bottom: 0.25rem;">
+            <span id="fpTerminalProgressLabel">Examinando crestas a milímetro...</span>
+            <span id="fpTerminalProgressSec" style="font-family: monospace;">0.0s / 1.5s</span>
+          </div>
+          <div style="background: rgba(255, 255, 255, 0.2); height: 6px; border-radius: 999px; overflow: hidden;">
+            <div id="fpTerminalProgressBar" style="width: 0%; height: 100%; background: #22c55e; transition: width 0.1s linear;"></div>
+          </div>
+        </div>
+
+        <!-- ESTADO INICIAL LIMPIO: Solo Botón Escanear Huella Digital -->
+        <div id="fpControlesInicial" style="display: flex; justify-content: center; width: 100%;">
+          <button id="btnEscanearHuellaOptica" class="btn-kiosk-scan" onclick="activarModoEscaneoHuella()">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M12 2a10 10 0 0 0-10 10v2a10 10 0 0 0 20 0v-2a10 10 0 0 0-10-10z"></path>
+              <path d="M12 7a5 5 0 0 0-5 5v2a5 5 0 0 0 10 0v-2a5 5 0 0 0-5-5z"></path>
+            </svg>
+            <span>Escanear Huella Digital</span>
+          </button>
+        </div>
+
+        <!-- ESTADO DE ESCANEO ACTIVO: Opciones de Captura y Cancelar -->
+        <div id="fpControlesEscaneando" style="display: none; flex-direction: column; align-items: center; gap: 0.5rem; width: 100%;">
+          <div style="display: flex; gap: 0.6rem; align-items: center;">
+            <button id="btnCapturarHuellaManual" class="btn-kiosk-scan" onclick="capturarHuellaOpticaMilimetrica()" style="padding: 0.75rem 1.6rem; font-size: 0.95rem;">
+              <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+              <span>Capturar Huella</span>
+            </button>
+            <button type="button" class="btn-kiosk-action" onclick="desactivarModoEscaneoHuella()" style="padding: 0.75rem 1.1rem; border-color: rgba(239, 68, 68, 0.6); color: #fca5a5;">
+              <span>Cancelar</span>
+            </button>
+          </div>
+        </div>
+
+      </footer>
+
+      <!-- Ventana Pequeña de Resultado Dactilar (no tan grande, compacta y elegante) -->
+      <div id="fpResultadoAccesoBox" class="fp-mini-result-window" style="display: none;">
+      </div>
+
+    </section>
+
+    <!-- =====================================================================
+         VISTA 4: CENTRO DE MONITOREO CCTV Y RACK TI
+         ===================================================================== -->
+    <section id="view-cctv" class="view-section">
+      <div class="cctv-dashboard-grid">
+
+        <!-- Mosaico Principal de Videovigilancia Avanzada -->
+        <div class="cctv-video-card" id="cctvCardContainer">
+          
+          <!-- Barra Superior del Monitor CCTV -->
+          <div class="cctv-card-header">
+            <div class="cctv-card-title">
+              <button class="btn btn-outline btn-sm" onclick="volverDeTerminal()" title="Regresar">
+                <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+              <div>
+                <span style="display: block; font-weight: 800;">Centro de Monitoreo CCTV & Videovigilancia</span>
+                <small style="color: var(--text-muted); font-size: 0.72rem;">EMPRESARIOTEC S.A. • Terminal Activo</small>
+              </div>
+            </div>
+            
+            <div class="cctv-header-actions">
+              <!-- Selector de Laboratorio / Sala para este dispositivo móvil -->
+              <div class="cctv-room-select-group">
+                <label for="selectCctvUbicacion">Área Supervisada:</label>
+                <select id="selectCctvUbicacion" class="form-control form-control-sm cctv-select-custom" onchange="cambiarUbicacionCctv(this.value)">
+                  <option value="Laboratorio Central de Cómputo">Laboratorio Central de Cómputo</option>
+                  <option value="Laboratorio de Robótica e IoT">Laboratorio de Robótica e IoT</option>
+                  <option value="Sala de Servidores TI (Rack)">Sala de Servidores TI (Rack)</option>
+                  <option value="Almacén de Equipos Críticos">Almacén de Equipos Críticos</option>
+                  <option value="Acceso Peatonal Principal">Acceso Peatonal Principal</option>
+                  <option value="Laboratorio de Electrónica">Laboratorio de Electrónica</option>
+                </select>
+              </div>
+
+              <div class="cctv-quick-btns">
+                <button class="btn btn-outline btn-sm" onclick="alternarCamaraCctv()" title="Alternar Cámara Frontal / Trasera">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M1 4v6h6m16 10v-6h-6"></path><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+                  <span>Girar Cámara</span>
+                </button>
+                <button id="btnNightVision" class="btn btn-outline btn-sm" onclick="alternarVisionNocturna()" title="Activar/Cambiar Modo Infrarrojo">
+                  <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line></svg>
+                  <span>Visión Nocturna</span>
+                </button>
+                <button class="btn btn-outline btn-sm btn-fullscreen-toggle" onclick="alternarPantallaCompletaCctv()" title="Modo Pantalla Completa Industrial">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                  <span>Pantalla Completa</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Viewport del Stream de Video con HUD Dinámico Integrado -->
+          <div class="cctv-video-viewport" id="cctvViewportBox">
+            <video id="cctvStreamVideo" autoplay playsinline muted></video>
+            
+            <!-- HUD SUPERIOR EN STREAM -->
+            <div class="cctv-hud-top-bar">
+              <div class="cctv-hud-left">
+                <span class="cctv-rec-dot"></span>
+                <span class="cctv-hud-label">CAM 01 • <span id="cctvHudUbicacion">LABORATORIO CENTRAL DE CÓMPUTO</span></span>
+                <span class="cctv-hud-divider">|</span>
+                <span class="live-clock" style="font-family: monospace; font-weight: 700;">--:--:--</span>
+                <span id="badgeCctvCamaraTipo" class="cctv-cam-badge">POSTERIOR (SALA)</span>
+                <span id="badgeCctvVisionTipo" class="cctv-cam-badge">COLOR DIURNO</span>
+              </div>
+
+              <!-- Botones flotantes HUD para Pantalla Completa y Móvil -->
+              <div class="cctv-hud-right">
+                <button class="cctv-hud-floating-btn" onclick="alternarCamaraCctv()" title="Girar Cámara">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M1 4v6h6m16 10v-6h-6"></path><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+                  <span>Girar</span>
+                </button>
+                <button id="btnHudNightVision" class="cctv-hud-floating-btn" onclick="alternarVisionNocturna()" title="Visión Nocturna">
+                  <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line></svg>
+                  <span>Visión IR</span>
+                </button>
+                <button class="cctv-hud-floating-btn btn-fullscreen-toggle" onclick="alternarPantallaCompletaCctv()" title="Pantalla Completa">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                  <span>Pantalla Completa</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- HUD INFERIOR: Medidor Óptico de Movimiento en Tiempo Real -->
+            <div class="cctv-hud-bottom-bar">
+              <div class="cctv-motion-meter-container">
+                <div class="cctv-motion-meter-header">
+                  <span style="display: flex; align-items: center; gap: 0.35rem;">
+                    <svg class="icon" style="width: 14px; height: 14px; color: #38bdf8;" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    Sensor Óptico: <strong id="cctvMotionLevel">0.0%</strong>
+                  </span>
+                  <span style="color: #94a3b8; font-size: 0.7rem;">Umbral: <strong id="cctvThresholdVal" style="color: #f8fafc;">1.0%</strong></span>
+                </div>
+                <div class="cctv-motion-track">
+                  <div id="cctvMotionBarFill" class="cctv-motion-bar-fill" style="width: 0%;"></div>
+                </div>
+              </div>
+
+              <div>
+                <span id="badgeHudCentinela" class="cctv-cam-badge sentry-disarmed">CENTINELA DESARMADO</span>
+              </div>
+            </div>
+
+            <!-- Banner Alarma Crítica de Intrusión (Activo al detectar movimiento no autorizado) -->
+            <div id="cctvIntrusionBanner" class="cctv-intrusion-banner" style="display: none;">
+              <div class="intrusion-icon-box">
+                <svg class="icon icon-xl" viewBox="0 0 24 24"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              </div>
+              <div class="intrusion-content">
+                <div class="intrusion-title">¡ALARMA DE SEGURIDAD ACTIVADA!</div>
+                <div id="cctvIntrusionDetalle" class="intrusion-subtitle">Movimiento no autorizado detectado en horario no laboral</div>
+              </div>
+              <div style="margin-top: 0.75rem;">
+                <button class="btn btn-warning btn-sm" style="font-weight: 800; text-transform: uppercase;" onclick="silenciarAlarmaIntrusion()">
+                  <svg class="icon" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+                  Silenciar Sirena
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Barra de Control Inferior de Acciones Manuales -->
+          <div class="cctv-bottom-controls">
+            <div style="font-size: 0.82rem; color: #64748b; display: flex; align-items: center; gap: 0.4rem;">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              <span>Vigilancia Continua • Grabación y Detección Local Offline</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-primary btn-sm" onclick="dispararAperturaRemotaCCTV()">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                Apertura Forzada
+              </button>
+              <button id="btnAlarmaManual" class="btn btn-danger btn-sm" onclick="alternarAlarmaPanico()">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                Sirena de Pánico
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Telemetría y Módulo Centinela Anti-Intrusión -->
+        <div class="telemetry-sidebar">
+          
+          <!-- MÓDULO CENTINELA FUERA DE HORARIO LABORAL -->
+          <div class="telemetry-sensor-card centinela-card">
+            <div class="telemetry-sensor-top">
+              <span class="telemetry-sensor-name" style="color: var(--color-primary);">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                Centinela Anti-Intrusión
+              </span>
+              <span id="badgeCentinelaEstado" class="telemetry-badge-state normal">DESARMADO</span>
+            </div>
+            
+            <p style="font-size: 0.78rem; color: #475569; margin: 0.4rem 0;">
+              Activar al culminar la jornada de trabajo. Si detecta el más mínimo movimiento en el laboratorio o sala, <strong>suena la sirena de inmediato</strong> y se registra el incidente.
+            </p>
+
+            <!-- Selector de Sensibilidad del Sensor de Movimiento -->
+            <div class="centinela-sensitivity-panel">
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; font-weight: 700; color: #334155; margin-bottom: 0.25rem;">
+                <span>Sensibilidad del Sensor:</span>
+                <span id="txtSensibilidadCentinela" style="color: var(--color-primary);">1.0% - Ultra-Sensible</span>
+              </div>
+              <input type="range" id="sliderSensibilidadCentinela" min="0.5" max="6.0" step="0.5" value="1.0" oninput="cambiarSensibilidadCentinela(this.value)" class="cctv-range-slider" aria-label="Sensibilidad del sensor de movimiento centinela">
+              <div style="display: flex; justify-content: space-between; font-size: 0.68rem; color: #94a3b8; margin-top: 0.2rem;">
+                <span>0.5% (Máxima)</span>
+                <span>3.0% (Media)</span>
+                <span>6.0% (Baja)</span>
+              </div>
+            </div>
+
+            <div style="margin-top: 0.85rem;">
+              <button id="btnToggleCentinela" class="btn btn-primary btn-sm" style="width: 100%; justify-content: center;" onclick="alternarCentinelaNocturno()">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <span>Armar Centinela Fuera de Horario</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sensor de Impacto SW-420 -->
+          <div class="telemetry-sensor-card">
+            <div class="telemetry-sensor-top">
+              <span class="telemetry-sensor-name">
+                <svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                Sensor SW-420 (Vibración)
+              </span>
+              <span id="badgeSw420Estado" class="telemetry-badge-state normal">NORMAL</span>
+            </div>
+            <p style="font-size: 0.75rem; color: #64748b;">
+              Supervisión de golpes físicos o manipulación forzada del rack.
+            </p>
+          </div>
+
+          <!-- Sensor PIR HC-SR501 -->
+          <div class="telemetry-sensor-card">
+            <div class="telemetry-sensor-top">
+              <span class="telemetry-sensor-name">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line></svg>
+                Sensor PIR (Presencia)
+              </span>
+              <span id="badgePirEstado" class="telemetry-badge-state normal">SUPERVISANDO</span>
+            </div>
+            <p style="font-size: 0.75rem; color: #64748b;">
+              Detección perimetral infrarroja en sala de servidores.
+            </p>
+          </div>
+
+          <!-- Cerradura Solenoide -->
+          <div class="telemetry-sensor-card">
+            <div class="telemetry-sensor-top">
+              <span class="telemetry-sensor-name">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                Cerradura Solenoide
+              </span>
+              <span id="badgeCerraduraEstado" class="telemetry-badge-state normal">BLOQUEADA</span>
+            </div>
+            <p style="font-size: 0.75rem; color: #64748b;">
+              Relé con retardo programado (5 segundos de apertura).
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         VISTA 5: PANEL DE ADMINISTRACION MAESTRO
+         ===================================================================== -->
+    <section id="view-admin" class="view-section">
+      
+      <!-- CONTENIDO PESTAÑA INICIO: DASHBOARD PRINCIPAL CON TARJETAS ESTADÍSTICAS -->
+      <div id="tab-content-inicio" class="admin-tab-content active">
+        <!-- KPIs Superiores de Seguridad (Tarjetas Estadísticas Modernas) SOLO EN INICIO -->
+        <div class="admin-kpis-grid">
+          <!-- Tarjeta 1: Total Trabajadores -->
+          <div class="kpi-card-modern">
+            <div class="kpi-card-top">
+              <div class="kpi-icon-glow blue">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              </div>
+              <span class="kpi-trend-pill blue">
+                <svg class="icon" style="width: 12px; height: 12px;" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline></svg>
+                Nómina Activa
+              </span>
+            </div>
+            <div class="kpi-main-metric">
+              <h4 id="kpiTotalTrabajadores">0</h4>
+              <p>Personal Registrado</p>
+            </div>
+            <div class="kpi-progress-track">
+              <div class="kpi-progress-bar blue"></div>
+            </div>
+            <div class="kpi-footer-meta">
+              <span>Enrolamiento SQLite</span>
+              <span>100% Local</span>
+            </div>
+          </div>
+
+          <!-- Tarjeta 2: Accesos Autorizados -->
+          <div class="kpi-card-modern">
+            <div class="kpi-card-top">
+              <div class="kpi-icon-glow green">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              </div>
+              <span class="kpi-trend-pill green">
+                <svg class="icon" style="width: 12px; height: 12px;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Autorizados
+              </span>
+            </div>
+            <div class="kpi-main-metric">
+              <h4 id="kpiAccesosPermitidos">0</h4>
+              <p>Accesos Válidos</p>
+            </div>
+            <div class="kpi-progress-track">
+              <div class="kpi-progress-bar green"></div>
+            </div>
+            <div class="kpi-footer-meta">
+              <span>Facial + Dactilar</span>
+              <span>Alta Precisión</span>
+            </div>
+          </div>
+
+          <!-- Tarjeta 3: Accesos Denegados -->
+          <div class="kpi-card-modern">
+            <div class="kpi-card-top">
+              <div class="kpi-icon-glow red">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+              </div>
+              <span class="kpi-trend-pill red">
+                <svg class="icon" style="width: 12px; height: 12px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Bloqueados
+              </span>
+            </div>
+            <div class="kpi-main-metric">
+              <h4 id="kpiAccesosDenegados">0</h4>
+              <p>Intentos Fallidos</p>
+            </div>
+            <div class="kpi-progress-track">
+              <div class="kpi-progress-bar red" id="kpiBarDenegados"></div>
+            </div>
+            <div class="kpi-footer-meta">
+              <span>No Autorizados</span>
+              <span>Puerta Cerrada</span>
+            </div>
+          </div>
+
+          <!-- Tarjeta 4: Incidentes y Alarmas -->
+          <div class="kpi-card-modern">
+            <div class="kpi-card-top">
+              <div class="kpi-icon-glow amber">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              </div>
+              <span class="kpi-trend-pill amber">
+                <svg class="icon" style="width: 12px; height: 12px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                CCTV Centinela
+              </span>
+            </div>
+            <div class="kpi-main-metric">
+              <h4 id="kpiAlertasCriticas">0</h4>
+              <p>Alertas de Seguridad</p>
+            </div>
+            <div class="kpi-progress-track">
+              <div class="kpi-progress-bar amber" id="kpiBarAlertas"></div>
+            </div>
+            <div class="kpi-footer-meta">
+              <span>Sensores + Intrusión</span>
+              <span>Monitoreo 24/7</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mosaico de Resumen General Operativo para el Inicio -->
+        <div class="table-card" style="padding: 1.25rem; margin-top: 0.5rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+              <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0f172a;">Sistema de Seguridad Biométrico IoT Operativo</h3>
+              <p style="margin: 0.2rem 0 0 0; font-size: 0.78rem; color: #64748b;">
+                Base de datos local SQLite activa. Utilice el menú hamburguesa para acceder a la gestión de personal, reportes y terminales.
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+              <button class="btn btn-outline btn-sm" onclick="navegarTabAdminDesdeDrawer('trabajadores')">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                Personal
+              </button>
+              <button class="btn btn-outline btn-sm btn-excel-worker" onclick="navegarTabAdminDesdeDrawer('reportes')">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                Reportes
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="navegarTabAdminDesdeDrawer('logs')">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Auditoría
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTENIDO PESTAÑA 1: GESTION DE TRABAJADORES -->
+      <div id="tab-content-trabajadores" class="admin-tab-content">
+        <div class="table-card">
+          <div class="table-header-toolbar">
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+              <span style="font-weight: 700; font-size: 1rem;">Nómina de Personal Registrado</span>
+              <button class="btn btn-outline btn-sm btn-excel-worker" onclick="exportarExcelNomina()" title="Descargar Nómina Completa en Excel (Offline y Online)">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                <span>Exportar Nómina Excel (.xlsx)</span>
+              </button>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="abrirModalNuevoTrabajador()">
+              <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Nuevo Trabajador</span>
+            </button>
+          </div>
+
+          <!-- Barra de Búsqueda y Filtro en Tiempo Real de Trabajadores -->
+          <div class="workers-search-toolbar">
+            <div class="search-input-wrapper">
+              <svg class="icon search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" id="inputBuscarTrabajador" class="search-control" placeholder="Buscar por DNI, nombre, cargo o departamento..." oninput="filtrarTrabajadoresEnVivo(this.value)">
+              <button id="btnLimpiarBuscarTrabajador" class="btn-clear-search" onclick="limpiarBusquedaTrabajadores()" style="display: none;">✕</button>
+            </div>
+            <span id="badgeConteoTrabajadores" class="search-count-pill">0 Registrados</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="custom-table" id="tablaTrabajadores">
+              <thead>
+                <tr>
+                  <th>DNI</th>
+                  <th>Nombres y Apellidos</th>
+                  <th>Cargo</th>
+                  <th>Biometría Facial</th>
+                  <th>Biometría Dactilar</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaTrabajadoresBody">
+                <!-- Filas dinamicas -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTENIDO PESTAÑA REPORTES: CENTRO DE REPORTES EXCEL (INDIVIDUAL Y GRUPAL) -->
+      <div id="tab-content-reportes" class="admin-tab-content" style="display: none;">
+        <div class="table-card" style="padding: 1.5rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+              <h3 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                <svg class="icon" style="color: #16a34a;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                Centro de Reportes Excel
+              </h3>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <span class="status-pill-compact online">
+                <span class="status-dot"></span>
+                <span>Modo Dual: Online / Offline</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- GRID DE REPORTES GRUPALES -->
+          <div class="reports-hub-grid">
+            
+            <!-- Reporte Grupal 1: Nomina Completa -->
+            <div class="report-export-card">
+              <div>
+                <div class="report-card-header">
+                  <div class="report-card-icon">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                  </div>
+                  <div class="report-card-info">
+                    <span class="report-card-badge">REPORTE GRUPAL 01</span>
+                    <h4>Nómina Completa de Personal</h4>
+                    <p>Relación total de colaboradores registrados, cargos, áreas, estado de enrolamiento facial y registro dactilar Aratek.</p>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="report-card-features">
+                  <span class="report-feat-tag">✓ Nómina Total</span>
+                  <span class="report-feat-tag">✓ Biometría</span>
+                  <span class="report-feat-tag">✓ SQLite</span>
+                  <span class="report-feat-tag">✓ Con / Sin Internet</span>
+                </div>
+                <button type="button" class="btn-excel-export" onclick="exportarExcelNomina()">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>Descargar Nómina Grupal (.xlsx)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Reporte Grupal 2: Auditoria de Accesos -->
+            <div class="report-export-card">
+              <div>
+                <div class="report-card-header">
+                  <div class="report-card-icon" style="background: #e0f2fe; color: #0284c7; border-color: #bae6fd;">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                  </div>
+                  <div class="report-card-info">
+                    <span class="report-card-badge" style="background: #dcfce7; color: #16a34a;">REPORTE GRUPAL 02</span>
+                    <h4>Auditoría General de Marcaciones</h4>
+                    <p>Historial exhaustivo de ingresos y salidas con marcas de tiempo, método biométrico empleado, terminal física y estado.</p>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="report-card-features">
+                  <span class="report-feat-tag">✓ Timestamps ISO</span>
+                  <span class="report-feat-tag">✓ Marcaciones</span>
+                  <span class="report-feat-tag">✓ Colores de Estado</span>
+                  <span class="report-feat-tag">✓ 100% Offline</span>
+                </div>
+                <button type="button" class="btn-excel-export" style="background: #16a34a;" onclick="exportarExcelAccesos()">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>Descargar Auditoría de Accesos (.xlsx)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Reporte Grupal 3: Incidentes CCTV Centinela -->
+            <div class="report-export-card">
+              <div>
+                <div class="report-card-header">
+                  <div class="report-card-icon" style="background: #fef3c7; color: #d97706; border-color: #fde68a;">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                  </div>
+                  <div class="report-card-info">
+                    <span class="report-card-badge" style="background: #fee2e2; color: #dc2626;">REPORTE GRUPAL 03</span>
+                    <h4>Bitácora de Incidentes CCTV</h4>
+                    <p>Registro de alarmas de intrusión óptica nocturna, disparos de sensores de impacto SW-420, PIR y aperturas forzadas.</p>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="report-card-features">
+                  <span class="report-feat-tag">✓ Alarmas Centinela</span>
+                  <span class="report-feat-tag">✓ Niveles Críticos</span>
+                  <span class="report-feat-tag">✓ Telemetría IoT</span>
+                  <span class="report-feat-tag">✓ Formato .XLSX</span>
+                </div>
+                <button type="button" class="btn-excel-export" style="background: #d97706;" onclick="exportarExcelIncidentes()">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>Descargar Bitácora de Alarmas (.xlsx)</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- SECCION DE DESCARGA INDIVIDUAL DE FICHA TECNICA -->
+          <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <h4 style="font-size: 1.1rem; font-weight: 800; color: #0f172a;">
+                  Exportación de Ficha Técnica Individual por Colaborador
+                </h4>
+                <p style="font-size: 0.82rem; color: #64748b;">
+                  Seleccione un colaborador para emitir su Ficha Técnica en Excel con sus datos, estado biométrico y su historial personal de accesos:
+                </p>
+              </div>
+              <div style="display: flex; gap: 0.5rem; align-items: center; min-width: 280px; flex-wrap: wrap;">
+                <select id="selectTrabajadorExportIndividual" class="form-control" style="font-weight: 600; min-width: 220px;">
+                  <option value="">Seleccione colaborador...</option>
+                </select>
+                <button type="button" class="btn btn-primary" onclick="ejecutarDescargaIndividualSeleccionada()">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  Descargar Ficha (.xlsx)
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CONTENIDO PESTAÑA 2: CONFIGURACION DE CONTRASEÑAS DE LAS TERMINALES -->
+      <div id="tab-content-passwords" class="admin-tab-content" style="display: none;">
+        <div class="table-card" style="padding: 1.5rem; max-width: 700px; margin: 0 auto;">
+          <div style="margin-bottom: 1.25rem;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.25rem;">Configuración de Contraseñas de Terminales</h3>
+            <p style="font-size: 0.85rem; color: #64748b;">
+              Modifique las claves de acceso de cada una de las 3 pantallas terminales y los parámetros de seguridad. Los cambios se guardan directamente en SQLite.
+            </p>
+          </div>
+
+          <form onsubmit="guardarNuevasPasswordsTerminales(event)">
+            <div class="form-grid">
+              
+              <div class="form-group">
+                <label>Contraseña Terminal Facial:</label>
+                <input type="text" id="cfgPwdFacial" class="form-control" placeholder="FACIAL2026" required>
+                <small style="color: #64748b; font-size: 0.7rem;">Protege el acceso al Stand de Reconocimiento Facial.</small>
+              </div>
+
+              <div class="form-group">
+                <label>Contraseña Terminal Dactilar:</label>
+                <input type="text" id="cfgPwdHuella" class="form-control" placeholder="HUELLA2026" required>
+                <small style="color: #64748b; font-size: 0.7rem;">Protege el acceso al Lector de Huella Aratek.</small>
+              </div>
+
+              <div class="form-group">
+                <label>Contraseña Terminal CCTV:</label>
+                <input type="text" id="cfgPwdCctv" class="form-control" placeholder="CCTV2026" required>
+                <small style="color: #64748b; font-size: 0.7rem;">Protege el acceso al Centro de Monitoreo CCTV.</small>
+              </div>
+
+              <div class="form-group">
+                <label>Contraseña Maestra Admin:</label>
+                <input type="password" id="cfgPwdAdmin" class="form-control" placeholder="admin123" required>
+                <small style="color: #64748b; font-size: 0.7rem;">Clave del usuario administrador maestro.</small>
+              </div>
+
+              <div class="form-group">
+                <label>Tiempo Apertura Puerta (seg):</label>
+                <input type="number" id="cfgTiempoPuerta" class="form-control" min="1" max="60" value="5" required>
+              </div>
+
+              <div class="form-group">
+                <label>Umbral Distancia LBPH (0-100):</label>
+                <input type="number" id="cfgUmbralFacial" class="form-control" min="30" max="100" value="70" required>
+              </div>
+
+            </div>
+
+            <div style="margin-top: 1.5rem; text-align: right;">
+              <button type="submit" class="btn btn-primary">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Guardar Nuevas Contraseñas en SQLite
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- CONTENIDO PESTAÑA 3: AUDITORIA Y LOGS -->
+      <div id="tab-content-logs" class="admin-tab-content" style="display: none;">
+        <div class="table-card">
+          <div class="logs-header-toolbar-responsive">
+            <div class="logs-title-row">
+              <span class="logs-main-title">Registro de Eventos y Accesos</span>
+              <div class="logs-export-buttons">
+                <a href="/api/logs/exportar_csv" class="btn btn-outline btn-sm" download title="Descargar auditoría en CSV">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>Descargar CSV</span>
+                </a>
+                <a href="/api/reportes/excel/accesos" class="btn btn-outline btn-sm btn-excel-download" download title="Descargar auditoría en formato Excel Oficial (.xlsx / .xls)">
+                  <svg class="icon" style="color: #16a34a;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                  <span>Descargar .xlsx</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Buscador y Filtros de Estado para Auditoría -->
+            <div class="logs-filter-row">
+              <div class="search-input-wrapper logs-search-field">
+                <svg class="icon search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="inputBuscarLogs" class="search-control" placeholder="Buscar en auditoría (DNI, trabajador, sensor...)" oninput="filtrarLogsEnVivo(this.value)">
+                <button id="btnLimpiarBuscarLogs" class="btn-clear-search" onclick="limpiarBusquedaLogs()" style="display: none;">✕</button>
+              </div>
+
+              <div class="logs-filter-pills">
+                <button id="btnLogFilterAll" class="btn-filter-pill active" onclick="cambiarFiltroLogs(null)">Todos</button>
+                <button id="btnLogFilterPermitido" class="btn-filter-pill" onclick="cambiarFiltroLogs('PERMITIDO')">Permitidos</button>
+                <button id="btnLogFilterDenegado" class="btn-filter-pill" onclick="cambiarFiltroLogs('DENEGADO')">Denegados</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="custom-table" id="tablaLogs">
+              <thead>
+                <tr>
+                  <th>Fecha / Hora</th>
+                  <th>DNI</th>
+                  <th>Trabajador</th>
+                  <th>Método</th>
+                  <th>Estado</th>
+                  <th>Detalle Técnico</th>
+                </tr>
+              </thead>
+              <tbody id="tablaLogsBody">
+                <!-- Filas dinamicas -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- =========================================================================
+         MODAL: FICHA DETALLADA INTEGRAL DE TRABAJADOR (Al tocar fila en móvil)
+         ========================================================================= -->
+    <div id="modalFichaDetalleTrabajador" class="custom-modal-backdrop">
+      <div class="custom-modal-dialog" style="max-width: 480px;">
+        <div class="modal-header-corporate">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <div class="avatar-circle-corporate" id="fichaModalAvatar">KG</div>
+            <div>
+              <h3 id="fichaModalNombre" style="margin: 0; font-size: 1.05rem; font-weight: 800;">Nombre Completo</h3>
+              <span id="fichaModalDniBadge" style="font-size: 0.75rem; color: #64748b; font-family: monospace;">DNI: 00000000</span>
+            </div>
+          </div>
+          <button type="button" class="btn-close-modal" onclick="cerrarModalFichaTrabajador()" title="Cerrar Ficha">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <div class="modal-body-scrollable" style="padding: 1.25rem;">
+          <div class="ficha-detail-grid">
+            <div class="ficha-row">
+              <span class="ficha-label">Cargo Laboral:</span>
+              <strong id="fichaModalCargo" class="ficha-val">-</strong>
+            </div>
+            <div class="ficha-row">
+              <span class="ficha-label">Departamento:</span>
+              <span id="fichaModalDepartamento" class="ficha-val">-</span>
+            </div>
+            <div class="ficha-row">
+              <span class="ficha-label">Estado de Acceso:</span>
+              <span id="fichaModalEstado" class="badge-status active">ACTIVO</span>
+            </div>
+            <div class="ficha-row">
+              <span class="ficha-label">Biometría Facial:</span>
+              <span id="fichaModalFacial" class="badge-status active">✓ Rostro Entrenado</span>
+            </div>
+            <div class="ficha-row">
+              <span class="ficha-label">Biometría Dactilar:</span>
+              <span id="fichaModalHuella" class="badge-status active">✓ Huella AS608</span>
+            </div>
+            <div class="ficha-row">
+              <span class="ficha-label">Fecha de Alta:</span>
+              <span id="fichaModalFecha" style="font-size: 0.8rem; color: #64748b;">-</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <button class="btn btn-primary btn-sm" id="fichaModalBtnEditar" style="width: 100%; justify-content: center;">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+              Editar Datos del Trabajador
+            </button>
+            <button class="btn btn-outline btn-sm btn-excel-worker" id="fichaModalBtnExcel" style="width: 100%; justify-content: center;">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+              Descargar Ficha en Excel (.xlsx)
+            </button>
+            <button class="btn btn-outline btn-sm" id="fichaModalBtnEliminar" style="width: 100%; justify-content: center; color: #dc2626; border-color: #fca5a5;">
+              <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              Eliminar Trabajador
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =====================================================================
+         MODAL INTEGRAL "TODO EN UNO SOLO" DE TRABAJADOR (ALTA Y EDICION)
+         ===================================================================== -->
+    <div id="modalTrabajadorIntegral" class="custom-modal-backdrop">
+      <div class="custom-modal-dialog">
+        
+        <div class="modal-header-corporate">
+          <div class="modal-header-title">
+            <div class="brand-badge" style="width: 36px; height: 36px;">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle></svg>
+            </div>
+            <div>
+              <h3 id="modalTrabajadorTitle">Ficha de Registro y Enrolamiento Integral</h3>
+              <p>Datos personales, captura facial en vivo y vinculación de huella en un solo formulario</p>
+            </div>
+          </div>
+          <button type="button" class="btn-close-modal" onclick="cerrarModalTrabajadorIntegral()" title="Cerrar Formulario">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <form id="formTrabajadorIntegral" onsubmit="guardarTrabajadorIntegral(event)">
+          <input type="hidden" id="formTrabajadorId" value="">
+
+          <div class="modal-body-scroll">
+            
+            <!-- SECCION 1: DATOS GENERALES -->
+            <div class="modal-section-card">
+              <div class="modal-section-title">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span>1. Información Personal y Cargo</span>
+              </div>
+              
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="intDni">Número de DNI *</label>
+                  <input type="text" id="intDni" class="form-control" placeholder="8 dígitos numéricos" required maxlength="12">
+                </div>
+                <div class="form-group">
+                  <label for="intNombres">Nombres *</label>
+                  <input type="text" id="intNombres" class="form-control" placeholder="Ej: Carlos Alberto" required>
+                </div>
+                <div class="form-group">
+                  <label for="intApellidos">Apellidos *</label>
+                  <input type="text" id="intApellidos" class="form-control" placeholder="Ej: Mendoza Quispe" required>
+                </div>
+                <div class="form-group">
+                  <label for="intCargo">Cargo / Puesto *</label>
+                  <input type="text" id="intCargo" class="form-control" placeholder="Ej: Ingeniero de Seguridad IoT" required>
+                </div>
+                <div class="form-group">
+                  <label for="intDepto">Departamento / Área *</label>
+                  <input type="text" id="intDepto" class="form-control" placeholder="Ej: Tecnología y Operaciones" required>
+                </div>
+                <div class="form-group">
+                  <label for="intEstado">Estado Operativo</label>
+                  <select id="intEstado" class="form-control" aria-label="Estado Operativo">
+                    <option value="ACTIVO">ACTIVO (Autorizado)</option>
+                    <option value="INACTIVO">INACTIVO (Bloqueado)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECCION 2: BIOMETRIA FACIAL INTEGRADA -->
+            <div class="modal-section-card">
+              <div class="modal-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M7 3H5a2 2 0 0 0-2 2v2m18-4h-2a2 2 0 0 0-2 2v2M3 17v2a2 2 0 0 0 2 2h2m14-4v2a2 2 0 0 1-2 2h-2"></path><circle cx="12" cy="11" r="3"></circle></svg>
+                  <span>2. Registro Facial (3 Muestras para OpenCV LBPH)</span>
+                </div>
+                <span id="badgeConteoMuestras" class="badge-status" style="font-size: 0.75rem;">
+                  0 / 3 Fotos
+                </span>
+              </div>
+
+              <!-- Contenedor de Muestras Faciales (Limpio por defecto o muestra las fotos ya subidas) -->
+              <div id="contenedorMuestrasFaciales" style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 1.25rem; text-align: center; margin-top: 0.75rem;">
+                <div id="estadoVacioFacial">
+                  <div style="margin-bottom: 0.35rem;">
+                    <svg class="icon" style="width: 2.2rem; height: 2.2rem; color: #94a3b8; margin: 0 auto; display: block;" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                  </div>
+                  <div style="font-weight: 700; font-size: 0.9rem; color: #334155;">Sin fotos faciales registradas</div>
+                  <p style="font-size: 0.78rem; color: #64748b; margin: 0.25rem 0 0.85rem 0;">
+                    El sistema requiere 3 fotos (frontal, ángulo derecho y ángulo izquierdo) para calibrar el algoritmo LBPH.
+                  </p>
+                </div>
+
+                <!-- Miniaturas de las 3 fotos capturadas o existentes -->
+                <div id="modalThumbsFaciales" class="thumbs-gallery" style="display: none; justify-content: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                  <!-- Se insertan dinámicamente las 3 miniaturas -->
+                </div>
+
+                <!-- Botones de Acción para Tomar o Subir 3 Fotos -->
+                <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap;">
+                  <button type="button" class="btn btn-primary btn-sm" onclick="abrirCamaraFacialAsistida()" style="font-weight: 700;">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                    <span>Tomar 3 Fotos con Cámara</span>
+                  </button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('inputSubirFotoModal').click()" style="font-weight: 700;">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <span>Subir Fotos (Galería / Archivos)</span>
+                  </button>
+                  <button type="button" id="btnLimpiarFotosModal" class="btn btn-outline btn-sm" onclick="limpiarFotosFacialesModal()" style="display: none; color: #dc2626; border-color: #fca5a5;">
+                    <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    <span>Borrar y Tomar Nuevas</span>
+                  </button>
+                  <input type="file" id="inputSubirFotoModal" accept="image/*" multiple style="display: none;" onchange="procesarFotosMultiplesSubidas(event)">
+                </div>
+              </div>
+            </div>
+
+            <!-- SECCION 3: BIOMETRIA DACTILAR OPTICA POR CAMARA (OPENCV) -->
+            <div class="modal-section-card">
+              <div class="modal-section-title">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-10 10v2a10 10 0 0 0 20 0v-2a10 10 0 0 0-10-10z"></path></svg>
+                <span>3. Enrolamiento Biométrico Dactilar por Cámara (Touchless OpenCV)</span>
+              </div>
+
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem;">
+                
+                <!-- Selector de Dedo -->
+                <div style="margin-bottom: 0.85rem;">
+                  <label for="selectTipoDedoModal" style="font-size: 0.8rem; font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.35rem;">
+                    Dedo a Enrolar con Cámara Móvil:
+                  </label>
+                  <select id="selectTipoDedoModal" class="form-control" style="font-size: 0.86rem; font-weight: 600; padding: 0.5rem 0.75rem;">
+                    <option value="Índice Derecho">Dedo Índice Derecho (Recomendado)</option>
+                    <option value="Pulgar Derecho">Dedo Pulgar Derecho</option>
+                    <option value="Medio Derecho">Dedo Medio Derecho</option>
+                    <option value="Índice Izquierdo">Dedo Índice Izquierdo</option>
+                    <option value="Pulgar Izquierdo">Dedo Pulgar Izquierdo</option>
+                    <option value="Otro Dedo">Otro Dedo / Mano</option>
+                  </select>
+                  <div style="font-size: 0.73rem; color: #64748b; margin-top: 0.25rem;">
+                    Cada dedo tiene crestas y surcos papilares únicos. Puede registrar a cualquier persona o dedo.
+                  </div>
+                </div>
+
+                <!-- Estado y Previsualización de la Huella Enrolada -->
+                <div class="fingerprint-enroll-box" style="margin-bottom: 0.85rem;">
+                  <div id="modalFpTouchBox" class="fp-interactive-touch" onclick="abrirCamaraEnrolamientoHuellaOptica()" title="Clic para escanear yema con cámara" style="cursor: pointer;">
+                    <div id="modalFpThumbPreview" style="display: none; width: 100%; height: 100%; border-radius: 12px; overflow: hidden;">
+                      <img id="imgHuellaThumbModal" src="" alt="Huella" style="width: 100%; height: 100%; object-fit: cover; filter: contrast(130%);">
+                    </div>
+                    <svg id="svgIconHuellaVacio" class="icon icon-lg" viewBox="0 0 24 24">
+                      <path d="M12 2a10 10 0 0 0-10 10v2a10 10 0 0 0 20 0v-2a10 10 0 0 0-10-10z"></path>
+                      <path d="M12 7a5 5 0 0 0-5 5v2a5 5 0 0 0 10 0v-2a5 5 0 0 0-5-5z"></path>
+                      <line x1="12" y1="12" x2="12" y2="15"></line>
+                    </svg>
+                  </div>
+
+                  <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 0.88rem;" id="badgeEstadoHuellaModal">
+                      Huella Dactilar Pendiente
+                    </div>
+                    <p style="font-size: 0.75rem; color: #64748b; margin: 0.2rem 0 0.6rem 0;" id="descEstadoHuellaModal">
+                      Presione el botón para abrir la cámara con láser verde y capturar las minucias del dedo a 5 cm.
+                    </p>
+
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                      <button type="button" class="btn btn-primary btn-sm" onclick="abrirCamaraEnrolamientoHuellaOptica()" style="background: linear-gradient(135deg, #15803d, #16a34a); border-color: #15803d; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                        <span>Escanear Yema con Cámara</span>
+                      </button>
+                      <button type="button" id="btnBorrarHuellaModal" class="btn btn-outline btn-sm" onclick="limpiarHuellaDactilarModal()" style="display: none; color: #dc2626; border-color: #fca5a5; align-items: center; gap: 0.4rem;">
+                        <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        <span>Desvincular Huella</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          <div class="modal-footer-corporate">
+            <button type="button" class="btn btn-outline" onclick="cerrarModalTrabajadorIntegral()">
+              Cancelar
+            </button>
+            <button type="submit" id="btnGuardarTrabajadorIntegral" class="btn btn-primary">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              <span>Guardar y Registrar Trabajador</span>
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         OVERLAY PANTALLA COMPLETA NATIVA: ENROLAMIENTO DACTILAR CON CAMARA Y ENCUADRE A 5 CM
+         ========================================================================= -->
+    <div id="overlayFullscreenEnrollHuella" class="fp-fullscreen-kiosk-view" style="display: none; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 99999 !important; background: #000000;">
+      
+      <!-- Video en vivo a pantalla completa -->
+      <video id="videoEnrollHuellaFullscreen" class="fp-kiosk-video" autoplay playsinline muted></video>
+
+      <!-- Barra Superior Flotante Kiosco -->
+      <header class="fp-kiosk-top-header">
+        <button type="button" class="btn-kiosk-action" onclick="cerrarFullscreenEnrollHuella()" title="Cancelar y Volver al Formulario">
+          <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>Volver</span>
+        </button>
+
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button type="button" id="btnFlipEnrollFullscreen" class="btn-kiosk-action" onclick="alternarCamaraEnrollFullscreen()" title="Girar Cámara">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            <span id="txtModoEnrollFullscreen">Girar</span>
+          </button>
+          <button type="button" id="btnFlashEnrollFullscreen" class="btn-kiosk-action" onclick="alternarFlashEnrollFullscreen()" title="Activar / Apagar Flash">
+            <svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            <span>Flash</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Centro: Mira y Recuadro Dinámico de Detección de Yema -->
+      <div class="fp-kiosk-center-reticle">
+        <div id="dynamicBoundingBoxEnroll" class="dynamic-finger-box searching">
+          <div class="corner-bracket tl"></div>
+          <div class="corner-bracket tr"></div>
+          <div class="corner-bracket bl"></div>
+          <div class="corner-bracket br"></div>
+          <span class="box-tag" id="tagBoundingBoxEnroll">BUSCANDO YEMA...</span>
+        </div>
+      </div>
+
+      <!-- Barra Inferior Flotante Kiosco -->
+      <footer class="fp-kiosk-bottom-footer">
+        
+        <!-- Indicador de 3 Muestras (Toma 1/3, 2/3, 3/3) -->
+        <div id="containerMuestrasPills" style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 0.5rem;">
+          <div id="pillMuestra1" class="fp-sample-pill active">
+            <span class="pill-dot"></span>
+            <span>Toma 1</span>
+          </div>
+          <div id="pillMuestra2" class="fp-sample-pill">
+            <span class="pill-dot"></span>
+            <span>Toma 2</span>
+          </div>
+          <div id="pillMuestra3" class="fp-sample-pill">
+            <span class="pill-dot"></span>
+            <span>Toma 3</span>
+          </div>
+        </div>
+
+        <!-- Badge Dinámico de Detección de Encuadre a 5 cm en Tiempo Real -->
+        <div id="badgeGuiaEnrollFullscreen5cm" class="hud-distance-badge">
+          Presente la yema a 5-7 cm frente a la cámara
+        </div>
+
+        <div id="txtAutoCaptureHintEnroll" style="font-size: 0.76rem; color: #cbd5e1; font-weight: 700; margin-bottom: 0.65rem; text-shadow: 0 1px 4px rgba(0,0,0,0.8);">
+          Toma 1 de 3: Apoye el centro de la yema frente al recuadro
+        </div>
+
+        <!-- Botón Manual de Captura de Muestra -->
+        <button type="button" id="btnCapturarEnrollFullscreenManual" class="btn-kiosk-scan" onclick="dispararCapturaEnrollFullscreen(false)">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-10 10v2a10 10 0 0 0 20 0v-2a10 10 0 0 0-10-10z"></path><path d="M12 7a5 5 0 0 0-5 5v2a5 5 0 0 0 10 0v-2a5 5 0 0 0-5-5z"></path></svg>
+          <span id="btnCapturarEnrollText">Capturar Muestra (1/3)</span>
+        </button>
+
+      </footer>
+
+      <!-- Destello blanco al capturar -->
+      <div id="flashCaptureOverlayEnroll" style="display: none; position: absolute; inset: 0; background: #ffffff; z-index: 100000; pointer-events: none;"></div>
+
+    </div>
+
+  </main>
+
+  <!-- Scripts del Sistema -->
+  <script src="/static/js/xlsx.full.min.js"></script>
+  <script src="/static/js/sonidos.js?v=20261017_offline_realtime_v38"></script>
+  <script src="/static/js/webauthn_biometria.js?v=20261017_offline_realtime_v38"></script>
+  <script src="/static/js/app.js?v=20261017_offline_realtime_v38"></script>
+
+  <script>
+    // Enrutador de botones de terminales y modulos
+    function manejarAccesoTerminal(tipo) {
+      if (tipo === 'admin') {
+        if (AppState.sesionAdmin) {
+          cambiarVista('admin');
+        } else {
+          seleccionarRolLogin('admin');
+          cambiarVista('portal');
+        }
+        return;
+      }
+      if (AppState.sesionAdmin || (AppState.terminalDesbloqueada && AppState.terminalDesbloqueada[tipo])) {
+        AppState.terminalDesbloqueada[tipo] = true;
+        cambiarVista(tipo);
+      } else {
+        seleccionarRolLogin(tipo);
+        cambiarVista('portal');
+      }
+    }
+  </script>
+
+</body>
+</html>

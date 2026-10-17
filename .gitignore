@@ -1,0 +1,29 @@
+# SISTEMA DE SEGURIDAD BIOMETRICO IoT - EMPRESARIOTEC S.A.
+# Archivos ignorados para despliegue en Render y GitHub
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entornos virtuales
+venv/
+env/
+.env
+
+# Bloqueos temporales de SQLite
+db/*.db-wal
+db/*.db-shm
+
+# IDE y editores
+.vscode/
+.clangd/
+.idea/
+
+# Sistema operativo
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Logs
+*.log
