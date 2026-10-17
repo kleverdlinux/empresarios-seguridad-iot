@@ -3008,6 +3008,9 @@ async function iniciarCentroCCTV() {
     if (AppState.intervaloTelemetria) clearInterval(AppState.intervaloTelemetria);
     AppState.intervaloTelemetria = setInterval(consultarTelemetriaHardware, 1500);
     consultarTelemetriaHardware();
+
+    // Cargar bitácora histórica de alertas e incidentes CCTV
+    cargarHistorialAlertasCctv();
 }
 
 function detenerCentroCCTV() {
@@ -3301,16 +3304,39 @@ function dispararAlertaIntrusionMovimiento(porcentaje) {
     // SIRENA DE ALARMA AUTOMÁTICA CONTINUA
     audioSeguridad.iniciarAlarmaPanico();
 
-    // Notificar al backend SQLite inmediatamente
-    fetch('/api/hardware/evento_sensor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            tipo: 'INTRUSION_MOVIMIENTO_CCTV',
-            descripcion: `Intrusión detectada en ${AppState.cctvUbicacion} (${porcentaje.toFixed(1)}% variación) fuera de horario`,
-            nivel: 'CRITICO'
-        })
-    }).catch(e => console.warn('Error enviando evento de intrusion:', e));
+    const ahoraISO = new Date().toISOString();
+    const nuevoIncidente = {
+        tipo: 'incidente',
+        tipo_sensor: 'CENTINELA_INTRUSION',
+        nivel_alerta: 'CRITICO',
+        descripcion: `Intrusión detectada en ${AppState.cctvUbicacion} (${porcentaje.toFixed(1)}% variación) fuera de horario`,
+        timestamp: ahoraISO
+    };
+
+    // 1. Guardar en IndexedDB local e impactar la tabla en vivo al instante
+    OfflineStorage.obtenerIncidentes().then(lista => {
+        nuevoIncidente.id = (lista[0]?.id || 800) + 1;
+        lista.unshift(nuevoIncidente);
+        OfflineStorage.guardarIncidentes(lista);
+        renderizarFilasIncidentesCctv(lista);
+    });
+
+    // 2. Encolar para sincronización autónoma
+    OfflineStorage.encolarAccesoOffline(nuevoIncidente);
+
+    // 3. Notificar al backend SQLite si está en línea
+    if (navigator.onLine && estaConectadoAlServidor) {
+        fetch('/api/hardware/evento_sensor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tipo: 'INTRUSION_MOVIMIENTO_CCTV',
+                descripcion: nuevoIncidente.descripcion,
+                nivel: 'CRITICO',
+                timestamp: ahoraISO
+            })
+        }).catch(e => console.warn('Error enviando evento de intrusion:', e));
+    }
 
     if (timeoutSilencioIntrusion) clearTimeout(timeoutSilencioIntrusion);
     timeoutSilencioIntrusion = setTimeout(() => {
@@ -3325,6 +3351,183 @@ function silenciarAlarmaIntrusion() {
     if (banner) banner.style.display = 'none';
     if (viewport) viewport.classList.remove('viewport-alarm-active');
     audioSeguridad.detenerAlarmaPanico();
+}
+
+let alarmaPanicoManualActiva = false;
+function alternarAlarmaPanico() {
+    alarmaPanicoManualActiva = !alarmaPanicoManualActiva;
+    const btn = document.getElementById('btnAlarmaManual');
+    const banner = document.getElementById('cctvIntrusionBanner');
+    const viewport = document.getElementById('cctvViewportBox');
+    const detalleEl = document.getElementById('cctvIntrusionDetalle');
+
+    if (alarmaPanicoManualActiva) {
+        audioSeguridad.iniciarAlarmaPanico();
+        if (btn) {
+            btn.className = 'btn btn-warning btn-sm';
+            btn.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg> <span>Silenciar Sirena</span>`;
+        }
+        if (banner) {
+            banner.style.display = 'flex';
+            if (detalleEl) detalleEl.textContent = `¡Sirena de pánico manual activada en ${AppState.cctvUbicacion}!`;
+        }
+        if (viewport) viewport.classList.add('viewport-alarm-active');
+
+        const ahoraISO = new Date().toISOString();
+        const nuevoIncidente = {
+            tipo: 'incidente',
+            tipo_sensor: 'ALARMA_PANICO_MANUAL',
+            nivel_alerta: 'CRITICO',
+            descripcion: `Sirena de pánico manual activada por operador en ${AppState.cctvUbicacion}`,
+            timestamp: ahoraISO
+        };
+        OfflineStorage.obtenerIncidentes().then(lista => {
+            nuevoIncidente.id = (lista[0]?.id || 800) + 1;
+            lista.unshift(nuevoIncidente);
+            OfflineStorage.guardarIncidentes(lista);
+            renderizarFilasIncidentesCctv(lista);
+        });
+        OfflineStorage.encolarAccesoOffline(nuevoIncidente);
+
+        if (navigator.onLine && estaConectadoAlServidor) {
+            fetch('/api/hardware/evento_sensor', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(nuevoIncidente)
+            }).catch(e => {});
+        }
+
+    } else {
+        silenciarAlarmaIntrusion();
+        if (btn) {
+            btn.className = 'btn btn-danger btn-sm';
+            btn.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg> <span>Sirena de Pánico</span>`;
+        }
+    }
+}
+
+async function dispararAperturaRemotaCCTV() {
+    const badgeCerradura = document.getElementById('badgeCerraduraEstado');
+    if (badgeCerradura) {
+        badgeCerradura.className = 'telemetry-badge-state alert';
+        badgeCerradura.textContent = 'ABIERTA (5s)';
+    }
+
+    audioSeguridad.sonarAccesoPermitido();
+
+    Swal.fire({
+        icon: 'success',
+        title: 'Cerradura Solenoide Activada',
+        text: 'Desbloqueo remoto emitido por 5 segundos desde la consola de videovigilancia CCTV.',
+        timer: 2000,
+        showConfirmButton: false
+    });
+
+    const ahoraISO = new Date().toISOString();
+    const nuevoIncidente = {
+        tipo: 'incidente',
+        tipo_sensor: 'CERRADURA_REMOTE',
+        nivel_alerta: 'INFO',
+        descripcion: `Apertura remota de puerta autorizada desde consola CCTV (${AppState.cctvUbicacion})`,
+        timestamp: ahoraISO
+    };
+
+    OfflineStorage.obtenerIncidentes().then(lista => {
+        nuevoIncidente.id = (lista[0]?.id || 800) + 1;
+        lista.unshift(nuevoIncidente);
+        OfflineStorage.guardarIncidentes(lista);
+        renderizarFilasIncidentesCctv(lista);
+    });
+    OfflineStorage.encolarAccesoOffline(nuevoIncidente);
+
+    if (navigator.onLine && estaConectadoAlServidor) {
+        fetch('/api/hardware/abrir_puerta', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ origen: 'CCTV_CONSOLE', segundos: 5 })
+        }).catch(e => {});
+    }
+
+    setTimeout(() => {
+        if (badgeCerradura) {
+            badgeCerradura.className = 'telemetry-badge-state normal';
+            badgeCerradura.textContent = 'BLOQUEADA';
+        }
+    }, 5000);
+}
+
+async function cargarHistorialAlertasCctv() {
+    const tbody = document.getElementById('tablaIncidentesCctvBody');
+    if (!tbody) return;
+
+    let incidentes = await OfflineStorage.obtenerIncidentes();
+    if (!incidentes || incidentes.length === 0) {
+        try {
+            const raw = localStorage.getItem('cached_incidentes');
+            if (raw) incidentes = JSON.parse(raw);
+        } catch(e) {}
+    }
+
+    // Si hay conexión, refrescar preventivamente con el backend
+    if (navigator.onLine && estaConectadoAlServidor) {
+        try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 2000);
+            const resp = await fetch('/api/logs/incidentes?limite=100', { signal: controller.signal });
+            clearTimeout(timer);
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data.exito && Array.isArray(data.logs)) {
+                    incidentes = data.logs;
+                    await OfflineStorage.guardarIncidentes(data.logs);
+                }
+            }
+        } catch(e) {}
+    }
+
+    renderizarFilasIncidentesCctv(incidentes);
+}
+
+function renderizarFilasIncidentesCctv(lista) {
+    const tbody = document.getElementById('tablaIncidentesCctvBody');
+    const badge = document.getElementById('badgeCctvAlertasCount');
+    if (!tbody) return;
+
+    if (!lista || lista.length === 0) {
+        if (badge) badge.textContent = '0 Incidentes';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 1.5rem; color: #64748b;">No se registran alertas o intrusiones en la base de datos local.</td></tr>';
+        return;
+    }
+
+    if (badge) {
+        badge.textContent = `${lista.length} ${lista.length === 1 ? 'Incidente Registrado' : 'Incidentes Registrados'}`;
+    }
+
+    tbody.innerHTML = lista.slice(0, 50).map(inc => {
+        let badgeColor = '#0284c7';
+        let badgeBg = 'rgba(2, 132, 199, 0.12)';
+        const lvl = (inc.nivel_alerta || 'INFO').toUpperCase();
+        if (lvl.includes('CRITIC') || lvl.includes('PELIGRO')) {
+            badgeColor = '#ef4444';
+            badgeBg = 'rgba(239, 68, 68, 0.15)';
+        } else if (lvl.includes('ADVERT') || lvl.includes('WARN')) {
+            badgeColor = '#f59e0b';
+            badgeBg = 'rgba(245, 158, 11, 0.15)';
+        }
+
+        return `
+            <tr>
+                <td style="font-family: monospace; font-size: 0.8rem; white-space: nowrap; color: #0f172a; font-weight: 600;">${formatearFechaTabla(inc.timestamp)}</td>
+                <td><span class="terminal-badge" style="font-size: 0.72rem;">${inc.tipo_sensor || 'CENTINELA_AI'}</span></td>
+                <td>
+                    <span style="display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-weight: 800; font-size: 0.72rem; color: ${badgeColor}; background: ${badgeBg}; border: 1px solid ${badgeColor};">
+                        ${lvl}
+                    </span>
+                </td>
+                <td style="font-size: 0.8rem; color: #334155;">${inc.descripcion || 'Incidente registrado'}</td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function cambiarSensibilidadCentinela(valor) {

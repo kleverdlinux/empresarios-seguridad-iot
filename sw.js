@@ -5,7 +5,7 @@
 // y sirva la aplicacion, camara y reportes Excel desde la memoria local.
 // =============================================================================
 
-const CACHE_NAME = 'empresariotec-pwa-v49';
+const CACHE_NAME = 'empresariotec-pwa-v50';
 
 const CRITICAL_ASSETS = [
   '/',
@@ -237,6 +237,33 @@ const SEED_API_DATA = {
         timestamp: "2026-10-14T21:55:33.467658"
       }
     ]
+  },
+  '/api/logs/incidentes': {
+    exito: true,
+    offline: true,
+    logs: [
+      {
+        id: 101,
+        tipo_sensor: "CAMARA_CCTV_IA",
+        nivel_alerta: "CRITICO",
+        descripcion: "Alerta intrusión: Movimiento detectado en zona restringida CCTV (Modo Seguridad)",
+        timestamp: "2026-10-17T12:30:15"
+      },
+      {
+        id: 100,
+        tipo_sensor: "PANICO_MANUAL",
+        nivel_alerta: "ALERTA",
+        descripcion: "Sirena y alarma perimetral activadas manualmente desde consola CCTV",
+        timestamp: "2026-10-17T11:15:00"
+      },
+      {
+        id: 99,
+        tipo_sensor: "RELE_REMOTO",
+        nivel_alerta: "INFO",
+        descripcion: "Apertura forzada de esclusa de acceso autorizada remotamente desde CCTV",
+        timestamp: "2026-10-17T10:05:22"
+      }
+    ]
   }
 };
 
@@ -252,7 +279,7 @@ self.addEventListener('install', (event) => {
           if (res.ok) {
             await cache.put(url, res.clone());
             if (url.endsWith('.js') || url.endsWith('.css')) {
-              await cache.put(url + '?v=20261017_offline_scan_v49', res);
+              await cache.put(url + '?v=20261017_cctv_alerts_v50', res);
             }
           }
         } catch (err) {
@@ -471,6 +498,7 @@ self.addEventListener('fetch', (event) => {
             offline: true,
             trabajadores: SEED_API_DATA['/api/trabajadores'].trabajadores,
             logs: SEED_API_DATA['/api/logs/accesos'].logs,
+            incidentes: SEED_API_DATA['/api/logs/incidentes'].logs,
             stats: SEED_API_DATA['/api/dashboard/stats'].stats
           }), {
             status: 200,

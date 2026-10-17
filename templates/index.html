@@ -6,7 +6,7 @@
   <title>EMPRESARIOTEC S.A. | Sistema de Seguridad Biométrico IoT</title>
   
   <!-- Estilos del Sistema (Modo Claro Oficial) -->
-  <link rel="stylesheet" href="/static/css/style.css?v=20261017_offline_scan_v49">
+  <link rel="stylesheet" href="/static/css/style.css?v=20261017_cctv_alerts_v50">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#0284c7">
   
@@ -654,6 +654,45 @@
         </div>
 
       </div>
+
+        <!-- BITÁCORA E HISTORIAL DE ALERTAS CCTV EN VIVO (ONLINE / OFFLINE) -->
+        <div class="cctv-alerts-history-card">
+          <div class="cctv-alerts-header">
+            <div class="cctv-alerts-title-group">
+              <div class="cctv-alerts-icon">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              </div>
+              <div>
+                <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0f172a;">Historial de Alertas e Incidentes CCTV</h3>
+                <p style="margin: 0; font-size: 0.75rem; color: #64748b;">Bitácora auditable de intrusiones, sensores y alarmas • Operación Continua Online y Offline</p>
+              </div>
+            </div>
+            <div class="cctv-alerts-actions">
+              <span id="badgeCctvAlertasCount" class="badge-status active" style="font-size: 0.75rem; padding: 0.25rem 0.65rem;">0 Eventos Registrados</span>
+              <button type="button" class="btn btn-outline btn-sm" onclick="exportarExcelIncidentes()" title="Descargar bitácora de incidentes en Excel oficial">
+                <svg class="icon" style="color: #d97706;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg>
+                <span>Descargar Bitácora (.xlsx)</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive" style="max-height: 280px; overflow-y: auto; margin-top: 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <table class="custom-table" id="tablaIncidentesCctv" style="font-size: 0.82rem;">
+              <thead>
+                <tr>
+                  <th style="white-space: nowrap; min-width: 155px;">Fecha / Hora</th>
+                  <th style="white-space: nowrap;">Tipo de Sensor</th>
+                  <th style="white-space: nowrap;">Nivel</th>
+                  <th>Descripción del Incidente</th>
+                </tr>
+              </thead>
+              <tbody id="tablaIncidentesCctvBody">
+                <!-- Filas dinamicas de alertas -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
     </section>
 
     <!-- =====================================================================
@@ -1423,10 +1462,10 @@
 
   </main>
 
-  <script src="/static/js/exceljs.min.js?v=20261017_offline_scan_v49"></script>
-  <script src="/static/js/sonidos.js?v=20261017_offline_scan_v49"></script>
-  <script src="/static/js/webauthn_biometria.js?v=20261017_offline_scan_v49"></script>
-  <script src="/static/js/app.js?v=20261017_offline_scan_v49"></script>
+  <script src="/static/js/exceljs.min.js?v=20261017_cctv_alerts_v50"></script>
+  <script src="/static/js/sonidos.js?v=20261017_cctv_alerts_v50"></script>
+  <script src="/static/js/webauthn_biometria.js?v=20261017_cctv_alerts_v50"></script>
+  <script src="/static/js/app.js?v=20261017_cctv_alerts_v50"></script>
 
   <!-- PWA Service Worker (Modo Offline Total Anti-Dinosaurio) -->
   <script>
