@@ -280,9 +280,9 @@ def exportar_excel_trabajador_individual(trabajador, logs_usuario):
     fmt = crear_formatos_corporativos(wb)
     ahora_legible = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
-    ws.set_column(0, 0, 20)
-    ws.set_column(1, 1, 28)
-    ws.set_column(2, 2, 20)
+    ws.set_column(0, 0, 26)
+    ws.set_column(1, 1, 36)
+    ws.set_column(2, 2, 24)
     ws.set_column(3, 3, 28)
 
     # Banner

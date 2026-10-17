@@ -3722,49 +3722,133 @@ function escaparXml(val) {
         .replace(/'/g, '&apos;');
 }
 
+function formatearFechaHumana(val) {
+    if (!val || val === 'N/A' || val === 'null' || val === 'undefined') return 'N/A';
+    try {
+        const d = new Date(val);
+        if (!isNaN(d.getTime())) {
+            const pad = n => String(n).padStart(2, '0');
+            return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        }
+        return String(val).replace('T', ' ').substring(0, 19);
+    } catch (e) {
+        return String(val);
+    }
+}
+
 function descargarXlsxOffline(aoaData, sheetName, filename) {
+    // 1. Normalizar celdas: formatear fechas ISO y sanitizar nulos
+    const aoaLimpio = aoaData.map(row => {
+        return row.map(cell => {
+            if (cell === null || cell === undefined) return '';
+            const s = String(cell);
+            // Formatear automáticamente timestamps con milisegundos tipo 2026-10-13T12:56:40.468053
+            if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(s)) {
+                return formatearFechaHumana(s);
+            }
+            return cell;
+        });
+    });
+
     if (typeof XLSX !== 'undefined') {
         const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.aoa_to_sheet(aoaData);
+        const ws = XLSX.utils.aoa_to_sheet(aoaLimpio);
 
-        // 1. Calcular anchos de columna generosos para que NO se compriman los textos
-        const colWidths = [];
-        aoaData.forEach((row, rIdx) => {
-            if (rIdx < 3) return; // Omitir títulos para calcular sobre encabezados y datos reales
-            row.forEach((cell, cIdx) => {
-                const s = (cell !== undefined && cell !== null) ? String(cell) : '';
-                colWidths[cIdx] = Math.max(colWidths[cIdx] || 14, Math.min(s.length + 5, 45));
-            });
-        });
-        if (colWidths.length > 0) {
-            ws['!cols'] = colWidths.map(w => ({ wch: w }));
-        } else {
-            ws['!cols'] = [
-                { wch: 8 }, { wch: 22 }, { wch: 14 }, { wch: 26 },
-                { wch: 14 }, { wch: 20 }, { wch: 14 }, { wch: 38 }
-            ];
-        }
+        const totalCols = (aoaLimpio[0] ? aoaLimpio[0].length : 4) - 1;
 
-        // 2. Unir celdas de encabezado institucional (Merge)
-        const totalCols = (colWidths.length > 0) ? (colWidths.length - 1) : 7;
-        ws['!merges'] = [
+        // 2. Unir celdas institucionales (merges) para que NUNCA se corten los textos:
+        // Titulo (fila 0), subtitulo (fila 1), titulos de seccion (1. DATOS...) y avisos largos
+        const merges = [
             { s: { r: 0, c: 0 }, e: { r: 0, c: totalCols } },
             { s: { r: 1, c: 0 }, e: { r: 1, c: totalCols } }
         ];
 
-        XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31));
-        XLSX.writeFile(wb, filename);
-    } else {
-        // Fallback a CSV con BOM UTF-8 que Excel abre directamente sin advertencias
-        let csvContent = '\uFEFF';
-        aoaData.forEach(row => {
-            csvContent += row.map(cell => `"${String(cell !== undefined && cell !== null ? cell : '').replace(/"/g, '""')}"`).join(',') + '\r\n';
+        aoaLimpio.forEach((row, rIdx) => {
+            if (rIdx < 2 || !row || row.length === 0) return;
+            const first = String(row[0] || '').trim();
+            if (/^\d+\.\s+[A-ZÁÉÍÓÚÑ\s\(\)\d]+/.test(first) || first.startsWith('No se registran') || first.startsWith('Nota:') || first.startsWith('Total')) {
+                merges.push({ s: { r: rIdx, c: 0 }, e: { r: rIdx, c: totalCols } });
+            }
         });
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        ws['!merges'] = merges;
+
+        // 3. Anchos de columna generosos y bien calculados por tipo de reporte
+        const isFicha = aoaLimpio[0] && String(aoaLimpio[0][0] || '').includes('FICHA TÉCNICA');
+        const isNomina = aoaLimpio[0] && String(aoaLimpio[0][0] || '').includes('NÓMINA');
+        const isAccesos = aoaLimpio[0] && String(aoaLimpio[0][0] || '').includes('AUDITORÍA');
+
+        if (isFicha) {
+            ws['!cols'] = [{ wch: 26 }, { wch: 36 }, { wch: 24 }, { wch: 28 }];
+        } else if (isNomina) {
+            ws['!cols'] = [
+                { wch: 8 }, { wch: 15 }, { wch: 24 }, { wch: 24 }, { wch: 26 },
+                { wch: 24 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 22 }
+            ];
+        } else if (isAccesos) {
+            ws['!cols'] = [
+                { wch: 8 }, { wch: 22 }, { wch: 15 }, { wch: 26 },
+                { wch: 16 }, { wch: 22 }, { wch: 16 }, { wch: 28 }
+            ];
+        } else {
+            ws['!cols'] = [
+                { wch: 8 }, { wch: 22 }, { wch: 22 }, { wch: 16 }, { wch: 45 }
+            ];
+        }
+
+        XLSX.utils.book_append_sheet(wb, ws, sheetName.substring(0, 31));
+        XLSX.writeFile(wb, filename, { bookType: 'xlsx', cellStyles: true });
+    } else {
+        // Fallback: Generar documento HTML-Excel estilizado (.xls) con colores corporativos y bordes
+        const totalCols = (aoaLimpio[0] ? aoaLimpio[0].length : 4);
+        let htmlContent = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8">
+<style>
+  body { font-family: Segoe UI, sans-serif; font-size: 10pt; }
+  table { border-collapse: collapse; width: 100%; }
+  th { background-color: #0F172A; color: #FFFFFF; font-weight: bold; padding: 8px; border: 1px solid #334155; text-align: center; }
+  td { border: 1px solid #E2E8F0; padding: 6px 10px; vertical-align: middle; }
+  .title-brand { background-color: #0284C7; color: #FFFFFF; font-size: 14pt; font-weight: bold; padding: 10px; }
+  .sub-brand { background-color: #0369A1; color: #E0F2FE; font-size: 9.5pt; padding: 6px; }
+  .section-banner { background-color: #E2E8F0; color: #0F172A; font-weight: bold; font-size: 11pt; padding: 8px; }
+  .badge-green { background-color: #DCFCE7; color: #16A34A; font-weight: bold; text-align: center; }
+  .badge-red { background-color: #FEE2E2; color: #DC2626; font-weight: bold; text-align: center; }
+  .meta-label { background-color: #F8FAFC; font-weight: bold; color: #475569; }
+</style></head><body><table>`;
+
+        aoaLimpio.forEach((row, rIdx) => {
+            htmlContent += '<tr>';
+            if (rIdx === 0) {
+                htmlContent += `<td colspan="${totalCols}" class="title-brand">${escaparXml(row[0])}</td>`;
+            } else if (rIdx === 1) {
+                htmlContent += `<td colspan="${totalCols}" class="sub-brand">${escaparXml(row[0])}</td>`;
+            } else {
+                const first = String(row[0] || '').trim();
+                if (/^\d+\.\s+[A-ZÁÉÍÓÚÑ\s\(\)\d]+/.test(first) || first.startsWith('No se registran')) {
+                    htmlContent += `<td colspan="${totalCols}" class="section-banner">${escaparXml(first)}</td>`;
+                } else {
+                    row.forEach(cell => {
+                        const s = String(cell || '');
+                        if (s === 'REGISTRADO' || s === 'PERMITIDO' || s === 'ACTIVO') {
+                            htmlContent += `<td class="badge-green">${escaparXml(s)}</td>`;
+                        } else if (s === 'DENEGADO' || s === 'PENDIENTE' || s === 'NO ENROLADO' || s === 'NO ENROLADA') {
+                            htmlContent += `<td class="badge-red">${escaparXml(s)}</td>`;
+                        } else if (s.endsWith(':')) {
+                            htmlContent += `<td class="meta-label">${escaparXml(s)}</td>`;
+                        } else {
+                            htmlContent += `<td>${escaparXml(s)}</td>`;
+                        }
+                    });
+                }
+            }
+            htmlContent += '</tr>';
+        });
+
+        htmlContent += '</table></body></html>';
+        const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = filename.replace(/\.xlsx$/i, '.csv');
+        a.download = filename.replace(/\.xlsx$/i, '.xls');
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -3840,7 +3924,7 @@ function generarExcelNominaOffline() {
             t.rostro_registrado ? 'REGISTRADO' : 'PENDIENTE',
             t.huella_registrada ? 'REGISTRADO' : 'PENDIENTE',
             t.estado || 'ACTIVO',
-            t.fecha_creacion || t.fecha_registro || 'N/A'
+            formatearFechaHumana(t.fecha_creacion || t.fecha_registro)
         ]);
     });
 
@@ -3928,7 +4012,7 @@ function generarExcelAccesosOffline(logs) {
     logs.forEach((l, idx) => {
         aoa.push([
             l.id || (idx + 1),
-            l.timestamp ? l.timestamp.replace('T', ' ').substring(0, 19) : '',
+            formatearFechaHumana(l.timestamp),
             l.dni || 'N/A',
             l.nombre_usuario || 'Desconocido',
             l.metodo || 'DESCONOCIDO',
@@ -4019,7 +4103,7 @@ function generarExcelIncidentesOffline(incidentes) {
     incidentes.forEach((inc, idx) => {
         aoa.push([
             inc.id || (idx + 1),
-            inc.timestamp ? inc.timestamp.replace('T', ' ').substring(0, 19) : '',
+            formatearFechaHumana(inc.timestamp),
             inc.tipo_sensor || 'CENTINELA_AI',
             inc.nivel_alerta || 'ADVERTENCIA',
             inc.descripcion || 'Sin detalle'
@@ -4108,7 +4192,7 @@ function generarExcelTrabajadorOffline(trabajador, logsUsuario) {
         [],
         ['1. DATOS PERSONALES Y LABORALES', '', '', ''],
         ['DNI / Documento:', trabajador.dni || '', 'Estado Operativo:', trabajador.estado || 'ACTIVO'],
-        ['Nombres y Apellidos:', nombreCompleto, 'Fecha de Alta:', trabajador.fecha_registro || trabajador.fecha_creacion || 'N/A'],
+        ['Nombres y Apellidos:', nombreCompleto, 'Fecha de Alta:', formatearFechaHumana(trabajador.fecha_registro || trabajador.fecha_creacion)],
         ['Cargo / Puesto:', trabajador.cargo || 'Operativo', 'Departamento:', trabajador.departamento || 'General'],
         [],
         ['2. REGISTRO BIOMÉTRICO ASOCIADO', '', '', ''],
@@ -4123,7 +4207,7 @@ function generarExcelTrabajadorOffline(trabajador, logsUsuario) {
     } else {
         logsUsuario.forEach(l => {
             aoa.push([
-                l.timestamp || '',
+                formatearFechaHumana(l.timestamp),
                 l.terminal || 'TERMINAL_CENTRAL',
                 l.metodo || 'DESCONOCIDO',
                 l.estado || 'DENEGADO'
