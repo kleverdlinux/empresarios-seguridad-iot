@@ -29,7 +29,7 @@ if hasattr(time, 'tzset'):
         pass
 
 # Importar modulos locales
-from db.database_manager import DatabaseManager
+from db.database_manager import DatabaseManager, ahora_peru_iso, ahora_peru_dt, TZ_PERU
 from biometria.reconocimiento_facial import MotorFacialLBPH
 from biometria.reconocimiento_dactilar_optico import MotorDactilarOptico
 from reportes.generador_excel import (
@@ -50,7 +50,7 @@ estado_hardware = {
     'tiempo_restante': 0,
     'sensor_sw420_impacto': False,
     'sensor_pir_presencia': False,
-    'ultima_actualizacion': datetime.now().isoformat()
+    'ultima_actualizacion': ahora_peru_iso()
 }
 lock_hardware = threading.Lock()
 
@@ -237,7 +237,7 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
                 'exito': True,
                 'servidor': 'EMPRESARIOTEC_CORE',
                 'estado': 'ONLINE',
-                'timestamp': datetime.now().isoformat()
+                'timestamp': ahora_peru_iso()
             })
             return
 
@@ -339,7 +339,7 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
         if ruta == '/api/reportes/excel/nomina':
             trabajadores = db.obtener_trabajadores()
             xlsx_bytes = exportar_excel_nomina_completa(trabajadores)
-            timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp_str = datetime.now(TZ_PERU).strftime('%Y%m%d_%H%M%S')
             self.responder_excel(xlsx_bytes, f"nomina_trabajadores_empresariotec_{timestamp_str}.xlsx")
             return
 
@@ -347,7 +347,7 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
             limite = int(query.get('limite', [1000])[0])
             logs = db.obtener_logs_acceso(limite=limite)
             xlsx_bytes = exportar_excel_auditoria_accesos(logs)
-            timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp_str = datetime.now(TZ_PERU).strftime('%Y%m%d_%H%M%S')
             self.responder_excel(xlsx_bytes, f"auditoria_accesos_empresariotec_{timestamp_str}.xlsx")
             return
 
@@ -355,7 +355,7 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
             limite = int(query.get('limite', [500])[0])
             incidentes = db.obtener_logs_incidentes(limite=limite)
             xlsx_bytes = exportar_excel_incidentes_seguridad(incidentes)
-            timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp_str = datetime.now(TZ_PERU).strftime('%Y%m%d_%H%M%S')
             self.responder_excel(xlsx_bytes, f"incidentes_cctv_empresariotec_{timestamp_str}.xlsx")
             return
 
@@ -371,7 +371,7 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
                     logs_usuario = db.obtener_logs_acceso_por_usuario(usuario_id, limite=100)
                     xlsx_bytes = exportar_excel_trabajador_individual(usuario, logs_usuario)
                     dni_clean = usuario.get('dni', 'sin_dni')
-                    timestamp_str = datetime.now().strftime('%Y%m%d')
+                    timestamp_str = datetime.now(TZ_PERU).strftime('%Y%m%d')
                     self.responder_excel(xlsx_bytes, f"ficha_trabajador_{dni_clean}_{timestamp_str}.xlsx")
                     return
                 except ValueError:

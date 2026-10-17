@@ -10,15 +10,34 @@ tipografia ejecutiva, bandas alternadas, bordes y badges biometricos.
 """
 
 import io
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import xlsxwriter
 
+TZ_PERU = timezone(timedelta(hours=-5))
+
 def formatear_fecha(iso_str):
-    """Convierte formato ISO a texto legible humano."""
+    """Convierte formato ISO a texto legible humano en hora oficial de Perú (UTC-5)."""
     if not iso_str:
         return "N/A"
     try:
-        dt = datetime.fromisoformat(iso_str)
+        s = str(iso_str).strip()
+        if s.endswith('Z'):
+            dt = datetime.fromisoformat(s[:-1]).replace(tzinfo=timezone.utc).astimezone(TZ_PERU)
+            return dt.strftime("%d/%m/%Y %H:%M:%S")
+        elif 'T' in s:
+            dt = datetime.fromisoformat(s)
+            if dt.tzinfo is not None:
+                dt = dt.astimezone(TZ_PERU)
+            else:
+                dt = dt.replace(tzinfo=timezone.utc).astimezone(TZ_PERU)
+            return dt.strftime("%d/%m/%Y %H:%M:%S")
+        elif ' ' in s:
+            partes = s.split(' ')
+            f = partes[0].split('-')
+            if len(f) == 3 and len(f[0]) == 4:
+                return f"{f[2]}/{f[1]}/{f[0]} {partes[1]}"
+            return s
+        dt = datetime.fromisoformat(s)
         return dt.strftime("%d/%m/%Y %H:%M:%S")
     except Exception:
         return str(iso_str)
@@ -160,7 +179,7 @@ def exportar_excel_nomina_completa(trabajadores):
     ws.hide_gridlines(0)
 
     fmt = crear_formatos_corporativos(wb)
-    ahora_legible = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    ahora_legible = datetime.now(TZ_PERU).strftime("%d/%m/%Y %H:%M:%S")
 
     # Anchos de columna
     columnas = [
@@ -222,7 +241,7 @@ def exportar_excel_auditoria_accesos(logs):
     ws.hide_gridlines(0)
 
     fmt = crear_formatos_corporativos(wb)
-    ahora_legible = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    ahora_legible = datetime.now(TZ_PERU).strftime("%d/%m/%Y %H:%M:%S")
 
     # Anchos de columna
     columnas = [
@@ -278,7 +297,7 @@ def exportar_excel_trabajador_individual(trabajador, logs_usuario):
     ws.hide_gridlines(0)
 
     fmt = crear_formatos_corporativos(wb)
-    ahora_legible = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    ahora_legible = datetime.now(TZ_PERU).strftime("%d/%m/%Y %H:%M:%S")
 
     ws.set_column(0, 0, 26)
     ws.set_column(1, 1, 36)
@@ -368,7 +387,7 @@ def exportar_excel_incidentes_seguridad(incidentes):
     ws.hide_gridlines(0)
 
     fmt = crear_formatos_corporativos(wb)
-    ahora_legible = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    ahora_legible = datetime.now(TZ_PERU).strftime("%d/%m/%Y %H:%M:%S")
 
     columnas = [
         (0, 8),   # ID

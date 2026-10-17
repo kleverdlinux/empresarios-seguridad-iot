@@ -10,18 +10,24 @@ y mantiene integridad transaccional ACID conforme a estandares ISO 27001.
 import sqlite3
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+# Zona horaria oficial de Perú: UTC-5 permanente (sin horario de verano)
+TZ_PERU_FALLBACK = timezone(timedelta(hours=-5))
 try:
     from zoneinfo import ZoneInfo
     TZ_PERU = ZoneInfo('America/Lima')
 except Exception:
-    TZ_PERU = None
+    TZ_PERU = TZ_PERU_FALLBACK
+
+def ahora_peru_dt():
+    """Obtiene el objeto datetime actual con hora oficial de Perú (UTC-5 garantizado)."""
+    tz = TZ_PERU if TZ_PERU is not None else TZ_PERU_FALLBACK
+    return datetime.now(tz)
 
 def ahora_peru_iso():
     """Genera la fecha y hora oficial sincronizada con la hora de Perú (America/Lima UTC-5)."""
-    if TZ_PERU:
-        return datetime.now(TZ_PERU).strftime('%Y-%m-%d %H:%M:%S')
-    return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    return ahora_peru_dt().strftime('%Y-%m-%d %H:%M:%S')
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'seguridad_empresariotec.db')
 

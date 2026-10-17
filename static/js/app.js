@@ -518,7 +518,7 @@ const OfflineStorage = {
     },
 
     async encolarAccesoOffline(evento) {
-        if (!evento.timestamp) evento.timestamp = new Date().toISOString();
+        if (!evento.timestamp) evento.timestamp = obtenerFechaHoraPeruISO();
         if (this.db) {
             try {
                 const tx = this.db.transaction('cola_sync', 'readwrite');
@@ -806,15 +806,62 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+function obtenerFechaHoraPeruISO() {
+    try {
+        const ahora = new Date();
+        const opciones = {
+            timeZone: 'America/Lima',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        };
+        const partes = new Intl.DateTimeFormat('en-CA', opciones).formatToParts(ahora);
+        const m = {};
+        partes.forEach(p => { m[p.type] = p.value; });
+        return `${m.year}-${m.month}-${m.day}T${m.hour}:${m.minute}:${m.second}-05:00`;
+    } catch (e) {
+        const d = new Date(Date.now() - 5 * 3600000);
+        return d.toISOString().slice(0, 19) + '-05:00';
+    }
+}
+
 function actualizarReloj() {
     const ahora = new Date();
-    const str = ahora.toLocaleTimeString('es-PE', { hour12: false }) + ' - ' + ahora.toLocaleDateString('es-PE');
+    const opciones = {
+        timeZone: 'America/Lima',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    };
+    let hh = '00', mm = '00', ss = '00', fechaStr = '';
+    try {
+        const partes = new Intl.DateTimeFormat('es-PE', opciones).formatToParts(ahora);
+        const m = {};
+        partes.forEach(p => { m[p.type] = p.value; });
+        hh = m.hour || '00';
+        mm = m.minute || '00';
+        ss = m.second || '00';
+        fechaStr = `${m.day}/${m.month}/${m.year}`;
+    } catch (e) {
+        const dPeru = new Date(Date.now() - 5 * 3600000);
+        hh = String(dPeru.getUTCHours()).padStart(2, '0');
+        mm = String(dPeru.getUTCMinutes()).padStart(2, '0');
+        ss = String(dPeru.getUTCSeconds()).padStart(2, '0');
+        fechaStr = dPeru.toISOString().slice(0, 10);
+    }
+
+    const str = `${hh}:${mm}:${ss} - ${fechaStr}`;
     document.querySelectorAll('.live-clock').forEach(el => el.textContent = str);
 
     // Reloj Flip Retro Digital (Fliqlo Style) en Tiempo Real
-    const hh = String(ahora.getHours()).padStart(2, '0');
-    const mm = String(ahora.getMinutes()).padStart(2, '0');
-    const ss = String(ahora.getSeconds()).padStart(2, '0');
     const elH = document.getElementById('flipHours');
     const elM = document.getElementById('flipMinutes');
     const elS = document.getElementById('flipSeconds');
@@ -1504,7 +1551,7 @@ async function procesarVerificacionFacialOffline(ctx, canvas, filtroVal) {
 
         if (!trabajador) return;
 
-        const ahoraISO = new Date().toISOString();
+        const ahoraISO = obtenerFechaHoraPeruISO();
 
         // 3. Veredicto biométrico exitoso offline
         const dataOffline = {
@@ -2221,7 +2268,7 @@ async function capturarHuellaOpticaMilimetrica() {
             }
 
             if (trabajador) {
-                const ahoraISO = new Date().toISOString();
+                const ahoraISO = obtenerFechaHoraPeruISO();
                 const nuevoEvento = {
                     tipo: 'acceso',
                     usuario_id: trabajador.id,
@@ -3304,7 +3351,7 @@ function dispararAlertaIntrusionMovimiento(porcentaje) {
     // SIRENA DE ALARMA AUTOMÁTICA CONTINUA
     audioSeguridad.iniciarAlarmaPanico();
 
-    const ahoraISO = new Date().toISOString();
+    const ahoraISO = obtenerFechaHoraPeruISO();
     const nuevoIncidente = {
         tipo: 'incidente',
         tipo_sensor: 'CENTINELA_INTRUSION',
@@ -3373,7 +3420,7 @@ function alternarAlarmaPanico() {
         }
         if (viewport) viewport.classList.add('viewport-alarm-active');
 
-        const ahoraISO = new Date().toISOString();
+        const ahoraISO = obtenerFechaHoraPeruISO();
         const nuevoIncidente = {
             tipo: 'incidente',
             tipo_sensor: 'ALARMA_PANICO_MANUAL',
@@ -3423,7 +3470,7 @@ async function dispararAperturaRemotaCCTV() {
         showConfirmButton: false
     });
 
-    const ahoraISO = new Date().toISOString();
+    const ahoraISO = obtenerFechaHoraPeruISO();
     const nuevoIncidente = {
         tipo: 'incidente',
         tipo_sensor: 'CERRADURA_REMOTE',
@@ -4736,18 +4783,39 @@ async function recuperarLogsOffline(tbody) {
 function formatearFechaTabla(ts) {
     if (!ts) return '--:--:--';
     try {
-        let s = String(ts).trim();
-        if (s.includes('.')) s = s.split('.')[0];
-        s = s.replace('T', ' ');
-        // Convertir formato YYYY-MM-DD HH:mm:ss a DD/MM/YYYY HH:mm:ss oficial de Perú
-        const partes = s.split(' ');
-        if (partes.length === 2) {
+        let str = String(ts).trim();
+
+        // 1. Si ya viene como texto limpio 'YYYY-MM-DD HH:mm:ss' sin zona
+        if (!str.includes('T') && str.length === 19 && str.charAt(10) === ' ') {
+            const partes = str.split(' ');
             const f = partes[0].split('-');
             if (f.length === 3 && f[0].length === 4) {
                 return `${f[2]}/${f[1]}/${f[0]} ${partes[1]}`;
             }
         }
-        return s;
+
+        // 2. Si es formato ISO UTC (como '2026-10-17T19:44:44.002632' de Python o toISOString())
+        if (str.includes('T') && !str.endsWith('Z') && !str.includes('+') && !str.includes('-05:00')) {
+            str = str + 'Z';
+        }
+
+        const d = new Date(str);
+        if (isNaN(d.getTime())) return String(ts);
+
+        const opciones = {
+            timeZone: 'America/Lima',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        };
+        const partes = new Intl.DateTimeFormat('es-PE', opciones).formatToParts(d);
+        const m = {};
+        partes.forEach(p => { m[p.type] = p.value; });
+        return `${m.day}/${m.month}/${m.year} ${m.hour}:${m.minute}:${m.second}`;
     } catch (e) {
         return String(ts);
     }
@@ -4940,16 +5008,7 @@ function escaparXml(val) {
 
 function formatearFechaHumana(val) {
     if (!val || val === 'N/A' || val === 'null' || val === 'undefined') return 'N/A';
-    try {
-        const d = new Date(val);
-        if (!isNaN(d.getTime())) {
-            const pad = n => String(n).padStart(2, '0');
-            return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-        }
-        return String(val).replace('T', ' ').substring(0, 19);
-    } catch (e) {
-        return String(val);
-    }
+    return formatearFechaTabla(val);
 }
 
 async function descargarXlsxOffline(aoaData, sheetName, filename) {
@@ -5289,7 +5348,7 @@ async function exportarExcelNomina() {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `nomina_trabajadores_empresariotec_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                a.download = `nomina_trabajadores_empresariotec_${obtenerFechaHoraPeruISO().slice(0, 10)}.xlsx`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -5349,7 +5408,7 @@ async function generarExcelNominaOffline() {
         ]);
     });
 
-    await descargarXlsxOffline(aoa, 'Nomina_Personal', `nomina_trabajadores_empresariotec_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    await descargarXlsxOffline(aoa, 'Nomina_Personal', `nomina_trabajadores_empresariotec_${obtenerFechaHoraPeruISO().slice(0, 10)}.xlsx`);
     Swal.fire({
         icon: 'success',
         title: 'Nómina Descargada (Offline)',
@@ -5383,7 +5442,7 @@ async function exportarExcelAccesos() {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `auditoria_accesos_empresariotec_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                a.download = `auditoria_accesos_empresariotec_${obtenerFechaHoraPeruISO().slice(0, 10)}.xlsx`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -5447,7 +5506,7 @@ async function generarExcelAccesosOffline(logs) {
         ]);
     });
 
-    await descargarXlsxOffline(aoa, 'Auditoria_Accesos', `auditoria_accesos_empresariotec_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    await descargarXlsxOffline(aoa, 'Auditoria_Accesos', `auditoria_accesos_empresariotec_${obtenerFechaHoraPeruISO().slice(0, 10)}.xlsx`);
     Swal.fire({
         icon: 'success',
         title: 'Auditoría Descargada (Offline)',
@@ -5481,7 +5540,7 @@ async function exportarExcelIncidentes() {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `incidentes_cctv_empresariotec_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                a.download = `incidentes_cctv_empresariotec_${obtenerFechaHoraPeruISO().slice(0, 10)}.xlsx`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -5535,7 +5594,7 @@ async function generarExcelIncidentesOffline(incidentes) {
         });
     }
 
-    await descargarXlsxOffline(aoa, 'Incidentes_Seguridad', `incidentes_cctv_empresariotec_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    await descargarXlsxOffline(aoa, 'Incidentes_Seguridad', `incidentes_cctv_empresariotec_${obtenerFechaHoraPeruISO().slice(0, 10)}.xlsx`);
     Swal.fire({
         icon: 'success',
         title: 'Bitácora Descargada (Offline)',
@@ -5569,7 +5628,7 @@ async function exportarFichaTrabajador(usuarioId) {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `ficha_trabajador_${usuarioId}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                a.download = `ficha_trabajador_${usuarioId}_${obtenerFechaHoraPeruISO().slice(0, 10)}.xlsx`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -5660,7 +5719,7 @@ async function generarExcelTrabajadorOffline(trabajador, logsUsuario) {
     }
 
     const dniLimpio = String(trabajador.dni || trabajador.id || 'colaborador').replace(/\s+/g, '_');
-    await descargarXlsxOffline(aoa, `Ficha_${dniLimpio}`, `ficha_trabajador_${dniLimpio}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    await descargarXlsxOffline(aoa, `Ficha_${dniLimpio}`, `ficha_trabajador_${dniLimpio}_${obtenerFechaHoraPeruISO().slice(0, 10)}.xlsx`);
     Swal.fire({
         icon: 'success',
         title: 'Ficha Individual Descargada (Offline)',
@@ -5707,7 +5766,7 @@ async function exportarCsvLogs() {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `auditoria_seguridad_empresariotec_${new Date().toISOString().slice(0, 10)}.csv`;
+                a.download = `auditoria_seguridad_empresariotec_${obtenerFechaHoraPeruISO().slice(0, 10)}.csv`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -5750,7 +5809,7 @@ async function exportarCsvLogs() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `auditoria_seguridad_empresariotec_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `auditoria_seguridad_empresariotec_${obtenerFechaHoraPeruISO().slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

@@ -5,7 +5,7 @@
 // y sirva la aplicacion, camara y reportes Excel desde la memoria local.
 // =============================================================================
 
-const CACHE_NAME = 'empresariotec-pwa-v50';
+const CACHE_NAME = 'empresariotec-pwa-v51';
 
 const CRITICAL_ASSETS = [
   '/',
@@ -279,7 +279,7 @@ self.addEventListener('install', (event) => {
           if (res.ok) {
             await cache.put(url, res.clone());
             if (url.endsWith('.js') || url.endsWith('.css')) {
-              await cache.put(url + '?v=20261017_cctv_alerts_v50', res);
+              await cache.put(url + '?v=20261017_peru_time_v51', res);
             }
           }
         } catch (err) {
