@@ -5,7 +5,7 @@
 // y sirva la aplicacion, camara y reportes Excel desde la memoria local.
 // =============================================================================
 
-const CACHE_NAME = 'empresariotec-pwa-v46';
+const CACHE_NAME = 'empresariotec-pwa-v47';
 
 const CRITICAL_ASSETS = [
   '/',
@@ -109,7 +109,7 @@ self.addEventListener('install', (event) => {
           if (res.ok) {
             await cache.put(url, res.clone());
             if (url.endsWith('.js') || url.endsWith('.css')) {
-              await cache.put(url + '?v=20261017_offline_db_styled_v45', res);
+              await cache.put(url + '?v=20261017_exceljs_offline_v47', res);
             }
           }
         } catch (err) {
@@ -253,6 +253,24 @@ self.addEventListener('fetch', (event) => {
   // C) PETICIONES API (/api/*)
   // Estrategia: Network con timeout de 1.5s -> Si no responde o está offline, Cache-First en 0ms
   if (url.pathname.startsWith('/api/')) {
+    // PROTECCIÓN CRÍTICA: Los reportes binarios (Excel/PDF/CSV) NUNCA deben recibir una respuesta JSON 200 de contingencia,
+    // ya que corrompería el archivo .xlsx o .csv en el cliente. Si falla la red o está offline, devolver 503 para que el cliente active su generador local.
+    if (url.pathname.startsWith('/api/reportes/') || url.pathname === '/api/logs/exportar_csv') {
+      event.respondWith(
+        fetch(req).catch(() => {
+          return new Response(JSON.stringify({
+            exito: false,
+            offline: true,
+            mensaje: 'Reporte binario offline no disponible en servidor. Generar con motor local del cliente.'
+          }), {
+            status: 503,
+            headers: { 'Content-Type': 'application/json; charset=utf-8' }
+          });
+        })
+      );
+      return;
+    }
+
     if (req.method === 'GET') {
       event.respondWith(
         (async () => {

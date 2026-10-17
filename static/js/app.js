@@ -4312,6 +4312,21 @@ function formatearFechaHumana(val) {
 }
 
 async function descargarXlsxOffline(aoaData, sheetName, filename) {
+    // Garantizar que ExcelJS esté disponible en el entorno
+    if (typeof ExcelJS === 'undefined' && typeof window !== 'undefined') {
+        try {
+            await new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = '/static/js/exceljs.min.js?v=20261017_exceljs_offline_v47';
+                s.onload = resolve;
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+        } catch(e) {
+            console.warn('[ExcelJS] Carga dinámica alternativa:', e);
+        }
+    }
+
     // 1. Normalizar celdas: formatear fechas ISO y sanitizar nulos
     const aoaLimpio = aoaData.map(row => {
         return row.map(cell => {
@@ -4533,8 +4548,11 @@ async function descargarXlsxOffline(aoaData, sheetName, filename) {
                 ws.columns = Array(totalCols).fill({ width: 20 });
             }
 
-            const buffer = await wb.xlsx.writeBuffer();
-            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const rawBuffer = await wb.xlsx.writeBuffer();
+            const uint8Array = rawBuffer instanceof Uint8Array ? rawBuffer : new Uint8Array(rawBuffer);
+            const blob = new Blob([uint8Array], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -4542,7 +4560,7 @@ async function descargarXlsxOffline(aoaData, sheetName, filename) {
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            setTimeout(() => URL.revokeObjectURL(url), 2500);
             return;
         } catch (excelErr) {
             console.error('[ExcelJS] Error generando XLSX:', excelErr);
@@ -4617,33 +4635,40 @@ async function exportarExcelNomina() {
         didOpen: () => Swal.showLoading()
     });
 
-    try {
-        const resp = await fetch('/api/reportes/excel/nomina');
-        if (resp.ok) {
-            const blob = await resp.blob();
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `nomina_trabajadores_empresariotec_${new Date().toISOString().slice(0, 10)}.xlsx`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            Swal.fire({
-                icon: 'success',
-                title: 'Nómina Descargada',
-                text: 'El reporte en Excel .xlsx ha sido generado.',
-                timer: 2000,
-                showConfirmButton: false
-            });
-            return;
+    if (navigator.onLine && estaConectadoAlServidor) {
+        try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 2000);
+            const resp = await fetch('/api/reportes/excel/nomina', { signal: controller.signal });
+            clearTimeout(timer);
+            const ct = (resp.headers.get('content-type') || '').toLowerCase();
+            const esExcelReal = resp.ok && (ct.includes('spreadsheet') || ct.includes('octet-stream') || ct.includes('excel'));
+            if (esExcelReal) {
+                const blob = await resp.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `nomina_trabajadores_empresariotec_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 2500);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Nómina Descargada',
+                    text: 'El reporte oficial en Excel .xlsx ha sido generado.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                return;
+            }
+        } catch (e) {
+            console.warn('Conexión con servidor no disponible, activando motor offline...');
         }
-    } catch (e) {
-        console.warn('Conexión con servidor no disponible, activando motor offline...');
     }
 
     // Modo Offline: Generar con datos en memoria o en localStorage
-    generarExcelNominaOffline();
+    await generarExcelNominaOffline();
 }
 
 async function generarExcelNominaOffline() {
@@ -4707,7 +4732,9 @@ async function exportarExcelAccesos() {
             const timer = setTimeout(() => controller.abort(), 2000);
             const resp = await fetch('/api/reportes/excel/accesos', { signal: controller.signal });
             clearTimeout(timer);
-            if (resp.ok) {
+            const ct = (resp.headers.get('content-type') || '').toLowerCase();
+            const esExcelReal = resp.ok && (ct.includes('spreadsheet') || ct.includes('octet-stream') || ct.includes('excel'));
+            if (esExcelReal) {
                 const blob = await resp.blob();
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -4716,7 +4743,7 @@ async function exportarExcelAccesos() {
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                setTimeout(() => URL.revokeObjectURL(url), 2500);
                 Swal.fire({
                     icon: 'success',
                     title: 'Auditoría Descargada',
@@ -4800,7 +4827,9 @@ async function exportarExcelIncidentes() {
             const timer = setTimeout(() => controller.abort(), 2000);
             const resp = await fetch('/api/reportes/excel/incidentes', { signal: controller.signal });
             clearTimeout(timer);
-            if (resp.ok) {
+            const ct = (resp.headers.get('content-type') || '').toLowerCase();
+            const esExcelReal = resp.ok && (ct.includes('spreadsheet') || ct.includes('octet-stream') || ct.includes('excel'));
+            if (esExcelReal) {
                 const blob = await resp.blob();
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -4809,7 +4838,7 @@ async function exportarExcelIncidentes() {
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                setTimeout(() => URL.revokeObjectURL(url), 2500);
                 Swal.fire({
                     icon: 'success',
                     title: 'Bitácora Descargada',
@@ -4884,7 +4913,9 @@ async function exportarFichaTrabajador(usuarioId) {
             const timer = setTimeout(() => controller.abort(), 2000);
             const resp = await fetch(`/api/reportes/excel/trabajador/${usuarioId}`, { signal: controller.signal });
             clearTimeout(timer);
-            if (resp.ok) {
+            const ct = (resp.headers.get('content-type') || '').toLowerCase();
+            const esExcelReal = resp.ok && (ct.includes('spreadsheet') || ct.includes('octet-stream') || ct.includes('excel'));
+            if (esExcelReal) {
                 const blob = await resp.blob();
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -4893,7 +4924,7 @@ async function exportarFichaTrabajador(usuarioId) {
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                setTimeout(() => URL.revokeObjectURL(url), 2500);
                 Swal.fire({
                     icon: 'success',
                     title: 'Ficha Individual Descargada',
@@ -4996,5 +5027,82 @@ function ejecutarDescargaIndividualSeleccionada() {
         return;
     }
     exportarFichaTrabajador(sel.value);
+}
+
+// -----------------------------------------------------------------------------
+// 5. EXPORTACIÓN CSV RESILIENTE (DUAL ONLINE / OFFLINE)
+// -----------------------------------------------------------------------------
+async function exportarCsvLogs() {
+    Swal.fire({
+        title: 'Generando CSV',
+        text: 'Exportando auditoría en formato CSV...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    if (navigator.onLine && estaConectadoAlServidor) {
+        try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 2000);
+            const resp = await fetch('/api/logs/exportar_csv', { signal: controller.signal });
+            clearTimeout(timer);
+            const ct = (resp.headers.get('content-type') || '').toLowerCase();
+            if (resp.ok && (ct.includes('csv') || ct.includes('text/plain') || ct.includes('octet-stream'))) {
+                const blob = await resp.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `auditoria_seguridad_empresariotec_${new Date().toISOString().slice(0, 10)}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 2000);
+                Swal.fire({ icon: 'success', title: 'CSV Descargado', timer: 1500, showConfirmButton: false });
+                return;
+            }
+        } catch (e) {
+            console.warn('Conexión con servidor no disponible para CSV, usando motor offline...');
+        }
+    }
+
+    // Modo Offline CSV
+    let logs = (AppState.todosLosLogs && AppState.todosLosLogs.length > 0) ? AppState.todosLosLogs : [];
+    if (logs.length === 0) {
+        try {
+            const raw = localStorage.getItem('cached_logs_accesos');
+            if (raw) logs = JSON.parse(raw);
+        } catch(e) {}
+    }
+    if (logs.length === 0) logs = OfflineStorage.SEED_LOGS;
+
+    let csvContent = "\uFEFFID,Fecha_Hora,DNI,Usuario,Metodo,Terminal,Estado,Detalle\n";
+    logs.forEach(l => {
+        const id = l.id || '';
+        const fecha = (l.timestamp || '').replace(/"/g, '""');
+        const dni = (l.dni || '').replace(/"/g, '""');
+        const usuario = (l.nombre_usuario || '').replace(/"/g, '""');
+        const metodo = (l.metodo || '').replace(/"/g, '""');
+        const term = (l.terminal || '').replace(/"/g, '""');
+        const estado = (l.estado || '').replace(/"/g, '""');
+        const det = (l.detalle || '').replace(/"/g, '""');
+        csvContent += `${id},"${fecha}","${dni}","${usuario}","${metodo}","${term}","${estado}","${det}"\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `auditoria_seguridad_empresariotec_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    Swal.fire({
+        icon: 'success',
+        title: 'CSV Descargado (Offline)',
+        text: `${logs.length} registros exportados exitosamente.`,
+        timer: 1500,
+        showConfirmButton: false
+    });
 }
 
