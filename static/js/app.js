@@ -5833,7 +5833,12 @@ async function solicitarReseteoBaseDeDatos() {
         // Refrescar tablas y paneles
         renderizarFilasLogs([], '');
         renderizarFilasIncidentesCctv([]);
-        await cargarDashboardStats();
+        if (typeof cargarEstadisticasDashboard === 'function') {
+            await cargarEstadisticasDashboard();
+        }
+        if (typeof cargarListaTrabajadores === 'function') {
+            await cargarListaTrabajadores();
+        }
 
         Swal.fire({
             icon: 'success',
