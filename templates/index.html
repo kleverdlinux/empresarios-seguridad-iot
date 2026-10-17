@@ -6,9 +6,100 @@
   <title>EMPRESARIOTEC S.A. | Sistema de Seguridad Biométrico IoT</title>
   
   <!-- Estilos del Sistema (Modo Claro Oficial) -->
-  <link rel="stylesheet" href="/static/css/style.css?v=20261017_cctv_history_v52">
+  <link rel="stylesheet" href="/static/css/style.css?v=20261017_v56_fix">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#0284c7">
+
+  <!-- Estilos Críticos Inline para Barras de Filtros y Reportes (A prueba de Caché) -->
+  <style id="app-filter-bars-style">
+    .cctv-filter-toolbar,
+    .filter-controls-grid {
+      display: flex !important;
+      align-items: center !important;
+      gap: 0.65rem !important;
+      flex-wrap: wrap !important;
+      padding: 0.65rem 1rem !important;
+      background: #f8fafc !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 8px !important;
+      box-sizing: border-box !important;
+      margin-top: 0.5rem !important;
+    }
+    .filter-item {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 0.4rem !important;
+      white-space: nowrap !important;
+    }
+    .filter-item-label {
+      font-size: 0.72rem !important;
+      font-weight: 700 !important;
+      color: #64748b !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.04em !important;
+      user-select: none !important;
+    }
+    .filter-input-date {
+      height: 32px !important;
+      padding: 0 0.5rem !important;
+      font-size: 0.78rem !important;
+      border: 1px solid #cbd5e1 !important;
+      border-radius: 6px !important;
+      background: #ffffff !important;
+      color: #0f172a !important;
+      outline: none !important;
+      font-family: inherit !important;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+      box-sizing: border-box !important;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+    }
+    .filter-input-date:focus {
+      border-color: #0284c7 !important;
+      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15) !important;
+    }
+    .filter-select {
+      height: 32px !important;
+      padding: 0 0.65rem !important;
+      font-size: 0.78rem !important;
+      border: 1px solid #cbd5e1 !important;
+      border-radius: 6px !important;
+      background: #ffffff !important;
+      color: #0f172a !important;
+      outline: none !important;
+      font-family: inherit !important;
+      font-weight: 500 !important;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+      box-sizing: border-box !important;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+    }
+    .filter-select:focus {
+      border-color: #0284c7 !important;
+      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15) !important;
+    }
+    .btn-filter-clear {
+      height: 32px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 0.35rem !important;
+      padding: 0 0.75rem !important;
+      font-size: 0.75rem !important;
+      font-weight: 700 !important;
+      background: #ffffff !important;
+      border: 1px solid #cbd5e1 !important;
+      color: #64748b !important;
+      border-radius: 6px !important;
+      cursor: pointer !important;
+      box-sizing: border-box !important;
+      white-space: nowrap !important;
+      transition: all 0.18s ease !important;
+    }
+    .btn-filter-clear:hover {
+      background: #fee2e2 !important;
+      border-color: #fca5a5 !important;
+      color: #dc2626 !important;
+    }
+  </style>
   
   <!-- SweetAlert2 Offline Bundle -->
   <script src="/static/js/sweetalert2.all.min.js"></script>
@@ -673,6 +764,10 @@
                 <svg class="icon" style="color: #d97706;" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg>
                 <span id="lblBtnDescargarExcelIncidentes">Descargar Bitácora (.xlsx)</span>
               </button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="vaciarBitacoraIncidentesCctv()" style="color: #dc2626; border-color: #fca5a5;" title="Vaciar bitácora y poner incidentes en cero">
+                <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <span>Limpiar Bitácora</span>
+              </button>
             </div>
           </div>
 
@@ -686,9 +781,9 @@
               <span class="filter-item-label">Hasta:</span>
               <input type="date" id="filtroFechaHastaCctv" class="filter-input-date" onchange="aplicarFiltrosIncidentesMultiples()" title="Fecha final del reporte">
             </div>
-            <div class="filter-item" style="flex: 1; min-width: 170px;">
+            <div class="filter-item">
               <span class="filter-item-label">Sensor:</span>
-              <select id="filtroSensorCctv" class="filter-select" style="width: 100%;" onchange="aplicarFiltrosIncidentesMultiples()">
+              <select id="filtroSensorCctv" class="filter-select" style="min-width: 170px; max-width: 250px;" onchange="aplicarFiltrosIncidentesMultiples()">
                 <option value="">Todos los Sensores / Eventos</option>
                 <option value="CAMARA_CCTV_IA">Cámara CCTV Centinela IA</option>
                 <option value="SW420_IMPACTO">Sensor de Impacto SW-420</option>
@@ -709,7 +804,7 @@
                 <option value="INFO">ℹ️ INFO</option>
               </select>
             </div>
-            <div class="filter-item" style="flex: 1; min-width: 140px;">
+            <div class="filter-item" style="flex: 1; min-width: 150px;">
               <input type="text" id="inputBuscarCctv" class="filter-select" style="width: 100%;" placeholder="Buscar en incidentes..." oninput="aplicarFiltrosIncidentesMultiples()">
             </div>
             <button type="button" class="btn-filter-clear" onclick="limpiarTodosFiltrosIncidentes()" title="Restablecer filtros de incidentes">
@@ -1174,9 +1269,9 @@
                 <span class="filter-item-label">Hasta:</span>
                 <input type="date" id="filtroFechaHastaLogs" class="filter-input-date" onchange="aplicarFiltrosLogsMultiples()" title="Fecha final del reporte">
               </div>
-              <div class="filter-item" style="flex: 1; min-width: 180px;">
+              <div class="filter-item">
                 <span class="filter-item-label">Lugar / Terminal:</span>
-                <select id="filtroTerminalLogs" class="filter-select" style="width: 100%;" onchange="aplicarFiltrosLogsMultiples()">
+                <select id="filtroTerminalLogs" class="filter-select" style="min-width: 180px; max-width: 270px;" onchange="aplicarFiltrosLogsMultiples()">
                   <option value="">Todos los Lugares / Terminales</option>
                   <option value="TERMINAL_FACIAL">Terminal Facial (Acceso LBPH)</option>
                   <option value="TERMINAL_HUELLA">Terminal Biométrico Huella</option>
@@ -1553,10 +1648,10 @@
 
   </main>
 
-  <script src="/static/js/exceljs.min.js?v=20261017_cctv_history_v52"></script>
-  <script src="/static/js/sonidos.js?v=20261017_cctv_history_v52"></script>
-  <script src="/static/js/webauthn_biometria.js?v=20261017_cctv_history_v52"></script>
-  <script src="/static/js/app.js?v=20261017_cctv_history_v52"></script>
+  <script src="/static/js/exceljs.min.js?v=20261017_v56_fix"></script>
+  <script src="/static/js/sonidos.js?v=20261017_v56_fix"></script>
+  <script src="/static/js/webauthn_biometria.js?v=20261017_v56_fix"></script>
+  <script src="/static/js/app.js?v=20261017_v56_fix"></script>
 
   <!-- PWA Service Worker (Modo Offline Total Anti-Dinosaurio) -->
   <script>

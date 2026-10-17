@@ -1104,6 +1104,11 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
             self.responder_json(200, {'exito': True, 'mensaje': 'Incidente registrado'})
             return
 
+        if ruta in ('/api/logs/incidentes/limpiar', '/api/cctv/limpiar_bitacora'):
+            db.limpiar_logs_incidentes()
+            self.responder_json(200, {'exito': True, 'mensaje': 'Bitácora de alertas e incidentes vaciada a cero.'})
+            return
+
         self.send_error(404, "Endpoint no encontrado")
 
     def do_PUT(self):
@@ -1127,6 +1132,11 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
     def do_DELETE(self):
         parsed_url = urlparse(self.path)
         ruta = parsed_url.path
+
+        if ruta in ('/api/logs/incidentes', '/api/logs/incidentes/limpiar', '/api/cctv/limpiar_bitacora'):
+            db.limpiar_logs_incidentes()
+            self.responder_json(200, {'exito': True, 'mensaje': 'Bitácora de alertas e incidentes vaciada a cero.'})
+            return
 
         if ruta.startswith('/api/trabajadores/'):
             partes = ruta.strip('/').split('/')

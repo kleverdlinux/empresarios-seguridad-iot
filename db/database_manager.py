@@ -485,6 +485,15 @@ class DatabaseManager:
             cursor.execute(query, tuple(params))
             return [dict(f) for f in cursor.fetchall()]
 
+    def limpiar_logs_incidentes(self):
+        """Vacía exclusivamente la tabla logs_incidentes a cero y reinicia su secuencia."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM logs_incidentes;")
+            cursor.execute("DELETE FROM sqlite_sequence WHERE name='logs_incidentes';")
+            conn.commit()
+            return True
+
     def resetear_base_de_datos_a_cero(self, purgar_usuarios_secundarios=True):
         """
         Purga y restablece la base de datos a CERO total:

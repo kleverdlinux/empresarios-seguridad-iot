@@ -3212,6 +3212,7 @@ function procesarDeteccionMovimientoCctv() {
 }
 
 let timeoutSilencioIntrusion = null;
+let ultimaAlertaIntrusionTs = 0;
 
 function dispararAlertaIntrusionMovimiento(porcentaje) {
     const banner = document.getElementById('cctvIntrusionBanner');
@@ -3230,6 +3231,17 @@ function dispararAlertaIntrusionMovimiento(porcentaje) {
 
     // SIRENA DE ALARMA AUTOMÁTICA CONTINUA
     audioSeguridad.iniciarAlarmaPanico();
+
+    // Cooldown de 8 segundos para evitar saturación de la base de datos local y remota
+    const ahoraTs = Date.now();
+    if (ahoraTs - ultimaAlertaIntrusionTs < 8000) {
+        if (timeoutSilencioIntrusion) clearTimeout(timeoutSilencioIntrusion);
+        timeoutSilencioIntrusion = setTimeout(() => {
+            silenciarAlarmaIntrusion();
+        }, 7000);
+        return;
+    }
+    ultimaAlertaIntrusionTs = ahoraTs;
 
     const ahoraISO = obtenerFechaHoraPeruISO();
     const nuevoIncidente = {
@@ -3406,33 +3418,107 @@ async function cargarHistorialAlertasCctv() {
             clearTimeout(timer);
             if (resp.ok) {
                 const data = await resp.json();
-                if (data.exito && Array.isArray(data.logs) && data.logs.length > 0) {
-                    const mapa = new Map();
-                    // Agregar locales primero
-                    incidentes.forEach(i => {
-                        const k = i.id ? `id_${i.id}` : `ts_${i.timestamp}_${i.tipo_sensor}`;
-                        mapa.set(k, i);
-                    });
-                    // Agregar/actualizar los del servidor
-                    data.logs.forEach(i => {
-                        const k = i.id ? `id_${i.id}` : `ts_${i.timestamp}_${i.tipo_sensor}`;
-                        mapa.set(k, i);
-                    });
-                    const combinados = Array.from(mapa.values());
-                    combinados.sort((a, b) => {
-                        const idA = a.id || 0;
-                        const idB = b.id || 0;
-                        if (idA !== idB) return idB - idA;
-                        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-                    });
-                    incidentes = combinados;
-                    AppState.todosLosIncidentes = combinados;
-                    AppState.incidentesFiltrados = combinados;
-                    await OfflineStorage.guardarIncidentes(incidentes);
-                    renderizarFilasIncidentesCctv(incidentes);
+                if (data.exito && Array.isArray(data.logs)) {
+                    // Si el servidor está completamente en CERO registros (base de datos reiniciada/limpia)
+                    if (data.logs.length === 0) {
+                        if (incidentes && incidentes.length > 0) {
+                            if (OfflineStorage.db) {
+                                try {
+                                    const tx = OfflineStorage.db.transaction('logs_incidentes', 'readwrite');
+                                    tx.objectStore('logs_incidentes').clear();
+                                } catch(e){}
+                            }
+                            try { localStorage.removeItem('cached_incidentes'); } catch(e){}
+                            incidentes = [];
+                            AppState.todosLosIncidentes = [];
+                            AppState.incidentesFiltrados = [];
+                            renderizarFilasIncidentesCctv([]);
+                            return;
+                        }
+                    } else {
+                        const mapa = new Map();
+                        // Agregar locales primero
+                        incidentes.forEach(i => {
+                            const k = i.id ? `id_${i.id}` : `ts_${i.timestamp}_${i.tipo_sensor}`;
+                            mapa.set(k, i);
+                        });
+                        // Agregar/actualizar los del servidor
+                        data.logs.forEach(i => {
+                            const k = i.id ? `id_${i.id}` : `ts_${i.timestamp}_${i.tipo_sensor}`;
+                            mapa.set(k, i);
+                        });
+                        const combinados = Array.from(mapa.values());
+                        combinados.sort((a, b) => {
+                            const idA = a.id || 0;
+                            const idB = b.id || 0;
+                            if (idA !== idB) return idB - idA;
+                            return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+                        });
+                        incidentes = combinados;
+                        AppState.todosLosIncidentes = combinados;
+                        AppState.incidentesFiltrados = combinados;
+                        await OfflineStorage.guardarIncidentes(incidentes);
+                        renderizarFilasIncidentesCctv(incidentes);
+                    }
                 }
             }
         } catch(e) {}
+    }
+}
+
+async function vaciarBitacoraIncidentesCctv() {
+    let confirmado = false;
+    if (typeof Swal !== 'undefined') {
+        const res = await Swal.fire({
+            title: '¿Vaciar Bitácora de CCTV?',
+            text: 'Se eliminarán todas las alertas e incidentes registrados (tanto de la memoria local como del servidor central). El contador volverá a 0.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Sí, vaciar bitácora',
+            cancelButtonText: 'Cancelar'
+        });
+        confirmado = res.isConfirmed;
+    } else {
+        confirmado = confirm('¿Desea vaciar todas las alertas e incidentes de CCTV a 0?');
+    }
+
+    if (!confirmado) return;
+
+    try {
+        // 1. Limpiar IndexedDB local
+        if (OfflineStorage.db) {
+            try {
+                const tx = OfflineStorage.db.transaction('logs_incidentes', 'readwrite');
+                tx.objectStore('logs_incidentes').clear();
+            } catch(e){}
+        }
+        try { localStorage.removeItem('cached_incidentes'); } catch(e){}
+
+        // 2. Limpiar en servidor si hay conexión
+        if (navigator.onLine && estaConectadoAlServidor) {
+            try {
+                await fetch('/api/logs/incidentes/limpiar', { method: 'POST' });
+            } catch(e){}
+        }
+
+        // 3. Resetear memoria y vista
+        AppState.todosLosIncidentes = [];
+        AppState.incidentesFiltrados = [];
+        renderizarFilasIncidentesCctv([]);
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Bitácora Limpia',
+                text: 'La bitácora de incidentes ha quedado en 0 registros.',
+                icon: 'success',
+                timer: 1800,
+                showConfirmButton: false
+            });
+        }
+    } catch(err) {
+        console.error('Error al vaciar bitácora de incidentes:', err);
     }
 }
 
