@@ -6,7 +6,7 @@
   <title>EMPRESARIOTEC S.A. | Sistema de Seguridad Biométrico IoT</title>
   
   <!-- Estilos del Sistema (Modo Claro Oficial) -->
-  <link rel="stylesheet" href="/static/css/style.css?v=20261017_v59_fp_fix">
+  <link rel="stylesheet" href="/static/css/style.css?v=20261017_v65_sim_transparent">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#0284c7">
 
@@ -458,14 +458,14 @@
         </div>
       </header>
 
-      <!-- Centro: Visor y Recuadro Dinámico de Detección de Yema Dactilar -->
-      <div id="fpKioskCenterReticle" class="fp-kiosk-center-reticle" style="display: block;">
+      <!-- Centro: Visor y Recuadro Dinámico de Detección de Yema Dactilar (aparece al presionar una acción) -->
+      <div id="fpKioskCenterReticle" class="fp-kiosk-center-reticle" style="display: none;">
         <div id="dynamicBoundingBoxTerminal" class="dynamic-finger-box detected">
           <div class="corner-bracket tl"></div>
           <div class="corner-bracket tr"></div>
           <div class="corner-bracket bl"></div>
           <div class="corner-bracket br"></div>
-          <span class="box-tag" id="tagBoundingBoxTerminal">YEMA DETECTADA (5 CM)</span>
+          <span class="box-tag" id="tagBoundingBoxTerminal">ENCUADRANDO DEDO (5 CM)...</span>
         </div>
       </div>
 
@@ -473,35 +473,33 @@
       <footer class="fp-kiosk-bottom-footer">
         
         <!-- Badge Dinámico de Detección del Dedo -->
-        <div id="badgeGuiaEncuadre5cm" class="hud-distance-badge optimo" style="display: inline-flex;">
-          Encuadre Óptico a 5 cm • Yema enfocada en visor
+        <div id="badgeGuiaEncuadre5cm" class="hud-distance-badge optimo" style="display: none;">
+          Encuadre Óptico a 5 cm • Yema en visor
         </div>
 
-        <div id="txtAutoCaptureHintTerminal" style="display: block; font-size: 0.76rem; color: #cbd5e1; font-weight: 700; margin-bottom: 0.65rem; text-shadow: 0 1px 4px rgba(0,0,0,0.8);">
-          Presente su dedo en el visor y elija la acción a simular:
+        <div id="txtAutoCaptureHintTerminal" style="display: none; font-size: 0.76rem; color: #cbd5e1; font-weight: 700; margin-bottom: 0.65rem; text-shadow: 0 1px 4px rgba(0,0,0,0.8);">
+          Examinando yema dactilar frente al lente...
         </div>
 
         <!-- Barra de Progreso de Análisis Dactilar -->
-        <div id="fpTerminalProgressBarContainer" style="display: none; width: 100%; max-width: 340px; margin-bottom: 0.75rem; background: rgba(15, 23, 42, 0.90); padding: 0.5rem 0.85rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25);">
-          <div style="display: flex; justify-content: space-between; font-size: 0.76rem; font-weight: 700; color: #4ade80; margin-bottom: 0.25rem;">
-            <span id="fpTerminalProgressLabel">Examinando crestas a milímetro...</span>
+        <div id="fpTerminalProgressBarContainer" style="display: none; width: 100%; max-width: 320px; margin-bottom: 0.65rem; background: rgba(15, 23, 42, 0.90); padding: 0.45rem 0.8rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25);">
+          <div style="display: flex; justify-content: space-between; font-size: 0.74rem; font-weight: 700; color: #4ade80; margin-bottom: 0.2rem;">
+            <span id="fpTerminalProgressLabel">Examinando huella a 5 cm...</span>
             <span id="fpTerminalProgressSec" style="font-family: monospace;">0.0s / 1.0s</span>
           </div>
-          <div style="background: rgba(255, 255, 255, 0.2); height: 6px; border-radius: 999px; overflow: hidden;">
+          <div style="background: rgba(255, 255, 255, 0.2); height: 5px; border-radius: 999px; overflow: hidden;">
             <div id="fpTerminalProgressBar" style="width: 0%; height: 100%; background: #22c55e; transition: width 0.1s linear;"></div>
           </div>
         </div>
 
-        <!-- CONTROLES PRINCIPALES: SIMULAR INGRESO Y SIMULAR RECHAZO DIRECTO SOBRE LA CÁMARA -->
-        <div id="fpControlesInicial" style="display: flex; gap: 0.7rem; justify-content: center; width: 100%; max-width: 440px;">
-          <button id="btnSimularIngresoCamara" class="btn-kiosk-scan" onclick="ejecutarSimulacionHuellaCamara('INGRESO')" style="flex: 1; padding: 0.8rem 1rem; font-size: 0.95rem; justify-content: center; background: linear-gradient(135deg, #15803d, #22c55e); box-shadow: 0 0 25px rgba(34, 197, 94, 0.65);">
-            <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Simular Ingreso</span>
+        <!-- BOTONES TRANSPARENTES COMPACTOS: PERMITIR Y DENEGAR -->
+        <div id="fpControlesInicial" style="display: flex; gap: 0.75rem; justify-content: center; align-items: center; width: auto; z-index: 50; pointer-events: auto;">
+          <button type="button" id="btnSimularPermitir" class="btn-kiosk-transparent" onclick="simularAccesoDactilar('PERMITIR')" title="Permitir">
+            Permitir
           </button>
           
-          <button id="btnSimularRechazoCamara" class="btn-kiosk-scan" onclick="ejecutarSimulacionHuellaCamara('RECHAZO')" style="flex: 1; padding: 0.8rem 1rem; font-size: 0.95rem; justify-content: center; background: linear-gradient(135deg, #b91c1c, #ef4444); border-color: rgba(248, 113, 113, 0.6); box-shadow: 0 0 25px rgba(239, 68, 68, 0.65);">
-            <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            <span>Simular Rechazo</span>
+          <button type="button" id="btnSimularDenegar" class="btn-kiosk-transparent" onclick="simularAccesoDactilar('DENEGAR')" title="Denegar">
+            Denegar
           </button>
         </div>
 
@@ -1641,10 +1639,10 @@
 
   </main>
 
-  <script src="/static/js/exceljs.min.js?v=20261017_v62_fp_fetch_fix"></script>
-  <script src="/static/js/sonidos.js?v=20261017_v62_fp_fetch_fix"></script>
-  <script src="/static/js/webauthn_biometria.js?v=20261017_v62_fp_fetch_fix"></script>
-  <script src="/static/js/app.js?v=20261017_v62_fp_fetch_fix"></script>
+  <script src="/static/js/exceljs.min.js?v=20261017_v65_sim_transparent"></script>
+  <script src="/static/js/sonidos.js?v=20261017_v65_sim_transparent"></script>
+  <script src="/static/js/webauthn_biometria.js?v=20261017_v65_sim_transparent"></script>
+  <script src="/static/js/app.js?v=20261017_v65_sim_transparent"></script>
 
   <!-- PWA Service Worker (Modo Offline Total Anti-Dinosaurio) -->
   <script>

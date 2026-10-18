@@ -2063,6 +2063,111 @@ function desactivarModoEscaneoHuella() {
 }
 
 /**
+ * Simulación de Acceso Dactilar interactiva sobre la cámara en vivo.
+ * Al presionar "Permitir" o "Denegar":
+ * 1. Aparece el encuadre (reticle) sobre la cámara.
+ * 2. Se muestra la animación de carga con audio láser.
+ * 3. Se envía al backend /api/biometria/simular_huella.
+ * 4. Muestra el modal estándar de acceso (permitido o denegado) con audio y relé de puerta.
+ */
+async function simularAccesoDactilar(tipo) {
+    if (window._simulandoHuella) return;
+    window._simulandoHuella = true;
+
+    const btnP = document.getElementById('btnSimularPermitir');
+    const btnD = document.getElementById('btnSimularDenegar');
+    if (btnP) btnP.disabled = true;
+    if (btnD) btnD.disabled = true;
+
+    const reticle = document.getElementById('fpKioskCenterReticle');
+    const box = document.getElementById('dynamicBoundingBoxTerminal');
+    const tag = document.getElementById('tagBoundingBoxTerminal');
+    const badge = document.getElementById('badgeGuiaEncuadre5cm');
+    const progressBox = document.getElementById('fpTerminalProgressBarContainer');
+    const progressBar = document.getElementById('fpTerminalProgressBar');
+    const progressLabel = document.getElementById('fpTerminalProgressLabel');
+    const progressSec = document.getElementById('fpTerminalProgressSec');
+    const resBox = document.getElementById('fpResultadoAccesoBox');
+
+    if (resBox) resBox.style.display = 'none';
+
+    // 1. Mostrar encuadre en la cámara
+    if (reticle) reticle.style.display = 'block';
+    if (box) {
+        box.className = 'dynamic-finger-box detected';
+    }
+    if (tag) {
+        tag.textContent = 'ENCUADRANDO DEDO (5 CM)...';
+    }
+    if (badge) {
+        badge.style.display = 'inline-flex';
+        badge.className = 'hud-distance-badge optimo';
+        badge.textContent = 'Encuadre Óptico • Yema dactilar frente al lente';
+    }
+
+    // 2. Reproducir sonido de escaneo láser y mostrar barra de progreso
+    if (typeof audioSeguridad !== 'undefined' && audioSeguridad.sonarEscaneoLaser) {
+        audioSeguridad.sonarEscaneoLaser();
+    }
+
+    if (progressBox) progressBox.style.display = 'block';
+    if (progressBar) progressBar.style.width = '20%';
+    if (progressLabel) progressLabel.textContent = 'Enfocando huella dactilar a 5 cm...';
+    if (progressSec) progressSec.textContent = '0.2s / 0.9s';
+
+    await new Promise(r => setTimeout(r, 250));
+
+    if (progressBar) progressBar.style.width = '65%';
+    if (progressLabel) progressLabel.textContent = 'Analizando crestas y minucias dérmicas...';
+    if (progressSec) progressSec.textContent = '0.6s / 0.9s';
+
+    // 3. Petición al endpoint de simulación
+    const select = document.getElementById('selectFiltroHuellaUsuario');
+    const idFiltro = (select && select.value) ? select.value : null;
+
+    let resultado = null;
+    try {
+        const resp = await fetch('/api/biometria/simular_huella', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tipo: (tipo === 'PERMITIR') ? 'INGRESO' : 'RECHAZO',
+                usuario_id: idFiltro
+            })
+        });
+        resultado = await resp.json();
+    } catch (err) {
+        console.warn('[SIMULAR HUELLA ERROR]', err);
+        resultado = {
+            estado: (tipo === 'PERMITIR') ? 'PERMITIDO' : 'DENEGADO',
+            mensaje: (tipo === 'PERMITIR') ? 'Acceso Autorizado' : 'Acceso Denegado: Huella No Coincide',
+            detalle: (tipo === 'PERMITIR') ? 'Huella dactilar validada correctamente.' : 'La huella dactilar no coincide con los patrones registrados.'
+        };
+    }
+
+    if (progressBar) progressBar.style.width = '100%';
+    if (progressSec) progressSec.textContent = '0.9s / 0.9s';
+    await new Promise(r => setTimeout(r, 160));
+
+    if (progressBox) progressBox.style.display = 'none';
+
+    // 4. Mostrar el mensaje estándar del sistema
+    procesarResultadoHuellaOpticaUI(resultado);
+
+    // 5. Restablecer controles cuando finalice la presentación
+    setTimeout(() => {
+        if (reticle) reticle.style.display = 'none';
+        if (badge) badge.style.display = 'none';
+        if (btnP) btnP.disabled = false;
+        if (btnD) btnD.disabled = false;
+        window._simulandoHuella = false;
+    }, 4000);
+}
+
+// Exponer a window para llamada desde onclick
+window.simularAccesoDactilar = simularAccesoDactilar;
+
+/**
  * Inicia el flujo de video en vivo de la cámara para el terminal dactilar (vista limpia).
  */
 async function iniciarCamaraTerminalHuella() {

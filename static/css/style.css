@@ -3474,6 +3474,44 @@ body.is-login-screen .login-view-wrapper {
   color: #22c55e;
 }
 
+/* Botones Transparentes Compactos para Simulación Huella */
+.btn-kiosk-transparent {
+  background: transparent !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.42) !important;
+  border-radius: 9999px !important;
+  padding: 0.35rem 0.95rem !important;
+  font-size: 0.80rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  letter-spacing: 0.3px !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  backdrop-filter: blur(4px) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  transition: all 0.15s ease !important;
+}
+
+.btn-kiosk-transparent:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.btn-kiosk-transparent:active {
+  transform: scale(0.96) !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+}
+
+.btn-kiosk-transparent:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
 /* Centro: Mira y Óvalo de Enfoque a 5 cm */
 .fp-kiosk-center-reticle {
   position: absolute;
