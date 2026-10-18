@@ -422,13 +422,12 @@
     </section>
 
     <!-- =====================================================================
-         VISTA 3: SIMULADOR TERMINAL BIOMÉTRICO DACTILAR (Aratek AS608 / Óptico)
+         VISTA 3: TERMINAL BIOMETRICO DACTILAR (Lectura y Verificación en Vivo)
          ===================================================================== -->
-    <section id="view-huella" class="view-section fp-fullscreen-kiosk-view fp-simulator-layout">
+    <section id="view-huella" class="view-section fp-fullscreen-kiosk-view">
       
-      <!-- Video opcional si se desea activar fondo de cámara -->
-      <video id="videoFeedHuellaOptica" class="fp-kiosk-video" autoplay playsinline muted style="display: none;"></video>
-      <div class="fp-simulator-cyber-bg"></div>
+      <!-- Video en vivo de la cámara a pantalla completa nativa -->
+      <video id="videoFeedHuellaOptica" class="fp-kiosk-video" autoplay playsinline muted></video>
 
       <!-- Barra Superior Flotante Kiosco -->
       <header class="fp-kiosk-top-header">
@@ -444,73 +443,69 @@
         </div>
 
         <div style="display: flex; gap: 0.4rem;">
-          <button type="button" id="btnToggleCamaraFondoHuella" class="btn-kiosk-action" onclick="alternarCamaraFondoHuella()" title="Activar / Desactivar Cámara de Fondo">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-            <span id="txtModoCamaraHuella">Cámara (Opcional)</span>
+          <button type="button" class="btn-kiosk-action" onclick="alternarCamaraScannerHuella()" title="Alternar Cámara Frontal / Trasera">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            <span id="txtModoCamaraHuella">Trasera</span>
+          </button>
+          <button type="button" id="btnToggleFlashHuella" class="btn-kiosk-action" onclick="alternarFlashLinternaHuella()" title="Activar / Apagar Flash">
+            <svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            <span>Flash</span>
+          </button>
+          <button type="button" class="btn-kiosk-action" onclick="solicitarRecalibrarDedoTerminal()" title="Vincular o cambiar el dedo autorizado" style="border-color: #38bdf8; color: #bae6fd;">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-10 10v2a10 10 0 0 0 20 0v-2a10 10 0 0 0-10-10z"></path></svg>
+            <span>Cambiar Dedo</span>
           </button>
         </div>
       </header>
 
-      <!-- Centro: Escenario del Simulador Dactilar Biométrico -->
-      <div class="fp-simulator-center-stage">
-        
-        <!-- Header del Sensor -->
-        <div class="fp-sensor-badge-title">
-          <span class="fp-sensor-pulse-dot"></span>
-          <span>SIMULADOR SENSOR DACTILAR ARATEK AS608</span>
+      <!-- Centro: Visor y Recuadro Dinámico de Detección de Yema Dactilar -->
+      <div id="fpKioskCenterReticle" class="fp-kiosk-center-reticle" style="display: block;">
+        <div id="dynamicBoundingBoxTerminal" class="dynamic-finger-box detected">
+          <div class="corner-bracket tl"></div>
+          <div class="corner-bracket tr"></div>
+          <div class="corner-bracket bl"></div>
+          <div class="corner-bracket br"></div>
+          <span class="box-tag" id="tagBoundingBoxTerminal">YEMA DETECTADA (5 CM)</span>
         </div>
-
-        <!-- Pad Biométrico Táctil con Huella Óptica y Efectos Neón -->
-        <div id="fpSimuladorScannerPad" class="fp-scanner-pad">
-          <div class="fp-pad-scanner-beam"></div>
-          <div class="fp-pad-rings"></div>
-          <!-- SVG Huella Dactilar Nítido y Futurista -->
-          <svg class="fp-fingerprint-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2a10 10 0 0 0-6.88 2.77"></path>
-            <path d="M18.88 4.77A10 10 0 0 0 12 2"></path>
-            <path d="M5.12 7.55A8 8 0 0 0 4 12c0 2 .5 3.8 1.4 5.3"></path>
-            <path d="M20 12a8 8 0 0 0-1.12-4.1"></path>
-            <path d="M18.6 17.3A8 8 0 0 0 20 12"></path>
-            <path d="M8.5 12a3.5 3.5 0 0 1 7 0c0 3.5-1.5 6-3.5 8"></path>
-            <path d="M12 9a3 3 0 0 0-3 3c0 2 .8 3.8 2 5"></path>
-            <path d="M15 12a3 3 0 0 0-.5-1.7"></path>
-            <path d="M12 6a6 6 0 0 0-6 6c0 1.9.7 3.6 1.8 5"></path>
-            <path d="M18.2 17A6 6 0 0 0 18 12"></path>
-          </svg>
-          <div class="fp-pad-status-tag" id="fpSimuladorStatusTxt">SENSOR LISTO • SELECCIONE UNA ACCIÓN</div>
-        </div>
-
-        <!-- Controles de Simulación: Simular Ingreso vs Simular Rechazo -->
-        <div class="fp-simulador-actions-container">
-          <button type="button" id="btnSimularHuellaIngreso" class="btn-sim-action btn-sim-ingreso" onclick="ejecutarSimulacionHuella('INGRESO')">
-            <div class="btn-sim-icon-circle">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            </div>
-            <div class="btn-sim-content">
-              <span class="btn-sim-title">Simular Ingreso</span>
-              <span class="btn-sim-sub">Acceso Autorizado • Abrir Puerta (5s)</span>
-            </div>
-          </button>
-
-          <button type="button" id="btnSimularHuellaRechazo" class="btn-sim-action btn-sim-rechazo" onclick="ejecutarSimulacionHuella('RECHAZO')">
-            <div class="btn-sim-icon-circle">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </div>
-            <div class="btn-sim-content">
-              <span class="btn-sim-title">Simular Rechazo</span>
-              <span class="btn-sim-sub">Huella No Coincide • Alerta Buzzer</span>
-            </div>
-          </button>
-        </div>
-
-        <!-- Badge de telemetría IoT -->
-        <div class="fp-telemetry-badge">
-          <span>Hardware: Aratek AS608 (Simulador Óptico)</span>
-          <span>•</span>
-          <span>Interfase: Relé Solenoide & SQLite</span>
-        </div>
-
       </div>
+
+      <!-- Barra Inferior Flotante Kiosco -->
+      <footer class="fp-kiosk-bottom-footer">
+        
+        <!-- Badge Dinámico de Detección del Dedo -->
+        <div id="badgeGuiaEncuadre5cm" class="hud-distance-badge optimo" style="display: inline-flex;">
+          Encuadre Óptico a 5 cm • Yema enfocada en visor
+        </div>
+
+        <div id="txtAutoCaptureHintTerminal" style="display: block; font-size: 0.76rem; color: #cbd5e1; font-weight: 700; margin-bottom: 0.65rem; text-shadow: 0 1px 4px rgba(0,0,0,0.8);">
+          Presente su dedo en el visor y elija la acción a simular:
+        </div>
+
+        <!-- Barra de Progreso de Análisis Dactilar -->
+        <div id="fpTerminalProgressBarContainer" style="display: none; width: 100%; max-width: 340px; margin-bottom: 0.75rem; background: rgba(15, 23, 42, 0.90); padding: 0.5rem 0.85rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.25);">
+          <div style="display: flex; justify-content: space-between; font-size: 0.76rem; font-weight: 700; color: #4ade80; margin-bottom: 0.25rem;">
+            <span id="fpTerminalProgressLabel">Examinando crestas a milímetro...</span>
+            <span id="fpTerminalProgressSec" style="font-family: monospace;">0.0s / 1.0s</span>
+          </div>
+          <div style="background: rgba(255, 255, 255, 0.2); height: 6px; border-radius: 999px; overflow: hidden;">
+            <div id="fpTerminalProgressBar" style="width: 0%; height: 100%; background: #22c55e; transition: width 0.1s linear;"></div>
+          </div>
+        </div>
+
+        <!-- CONTROLES PRINCIPALES: SIMULAR INGRESO Y SIMULAR RECHAZO DIRECTO SOBRE LA CÁMARA -->
+        <div id="fpControlesInicial" style="display: flex; gap: 0.7rem; justify-content: center; width: 100%; max-width: 440px;">
+          <button id="btnSimularIngresoCamara" class="btn-kiosk-scan" onclick="ejecutarSimulacionHuellaCamara('INGRESO')" style="flex: 1; padding: 0.8rem 1rem; font-size: 0.95rem; justify-content: center; background: linear-gradient(135deg, #15803d, #22c55e); box-shadow: 0 0 25px rgba(34, 197, 94, 0.65);">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Simular Ingreso</span>
+          </button>
+          
+          <button id="btnSimularRechazoCamara" class="btn-kiosk-scan" onclick="ejecutarSimulacionHuellaCamara('RECHAZO')" style="flex: 1; padding: 0.8rem 1rem; font-size: 0.95rem; justify-content: center; background: linear-gradient(135deg, #b91c1c, #ef4444); border-color: rgba(248, 113, 113, 0.6); box-shadow: 0 0 25px rgba(239, 68, 68, 0.65);">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <span>Simular Rechazo</span>
+          </button>
+        </div>
+
+      </footer>
 
       <!-- Ventana Pequeña de Resultado Dactilar (no tan grande, compacta y elegante) -->
       <div id="fpResultadoAccesoBox" class="fp-mini-result-window" style="display: none;">

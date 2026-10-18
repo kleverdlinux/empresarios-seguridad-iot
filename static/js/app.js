@@ -949,7 +949,7 @@ function cambiarVista(nombreVista) {
 
     if (nombreVista === 'huella') {
         cargarSelectorFiltroHuella();
-        iniciarTerminalHuellaSimulador();
+        iniciarCamaraTerminalHuella();
     } else {
         detenerCamaraTerminalHuella();
     }
@@ -1731,88 +1731,58 @@ function seleccionarModoHuellaTerminal(val) {
 }
 
 /**
- * Inicia el Simulador Terminal Dactilar Biométrico (Aratek AS608 / Óptico).
- * Carga de forma instantánea sin retrasos ni bloqueos de hardware.
+ * Ejecuta la simulación de acceso dactilar directamente sobre la cámara en vivo.
+ * Muestra el recuadro verde fijando el dedo, barra de progreso de escaneo, sonido láser,
+ * y luego el resultado (Acceso Autorizado con apertura de puerta vs Acceso Denegado con alarma).
  */
-function iniciarTerminalHuellaSimulador() {
-    window._simulandoHuella = false;
-    const scanPad = document.getElementById('fpSimuladorScannerPad');
-    if (scanPad) {
-        scanPad.classList.remove('scanning', 'success', 'denied');
-    }
-    const statusTxt = document.getElementById('fpSimuladorStatusTxt');
-    if (statusTxt) {
-        statusTxt.textContent = 'SENSOR LISTO • SELECCIONE UNA ACCIÓN';
-    }
-    const resBox = document.getElementById('fpResultadoAccesoBox');
-    if (resBox) {
-        resBox.style.display = 'none';
-    }
-    const btnIngreso = document.getElementById('btnSimularHuellaIngreso');
-    const btnRechazo = document.getElementById('btnSimularHuellaRechazo');
-    if (btnIngreso) btnIngreso.disabled = false;
-    if (btnRechazo) btnRechazo.disabled = false;
-}
+async function ejecutarSimulacionHuellaCamara(tipo) {
+    if (window._simulandoHuellaCamara) return;
+    window._simulandoHuellaCamara = true;
 
-/**
- * Alterna opcionalmente la cámara de fondo para quien desee ver video en el simulador.
- */
-async function alternarCamaraFondoHuella() {
-    const video = document.getElementById('videoFeedHuellaOptica');
-    const txtModo = document.getElementById('txtModoCamaraHuella');
-    if (!video) return;
-
-    if (streamHuellaOptica && streamHuellaOptica.active) {
-        detenerCamaraTerminalHuella();
-        video.style.display = 'none';
-        if (txtModo) txtModo.textContent = 'Cámara (Opcional)';
-    } else {
-        video.style.display = 'block';
-        if (txtModo) txtModo.textContent = 'Apagar Cámara';
-        await iniciarCamaraTerminalHuella();
-    }
-}
-
-/**
- * Ejecuta la simulación de acceso dactilar con respuesta inmediata y registro en SQLite.
- * tipo: 'INGRESO' o 'RECHAZO'
- */
-async function ejecutarSimulacionHuella(tipo) {
-    if (window._simulandoHuella) return;
-    window._simulandoHuella = true;
-
-    const scanPad = document.getElementById('fpSimuladorScannerPad');
-    const statusTxt = document.getElementById('fpSimuladorStatusTxt');
-    const btnIngreso = document.getElementById('btnSimularHuellaIngreso');
-    const btnRechazo = document.getElementById('btnSimularHuellaRechazo');
+    const box = document.getElementById('dynamicBoundingBoxTerminal');
+    const tag = document.getElementById('tagBoundingBoxTerminal');
+    const progressBox = document.getElementById('fpTerminalProgressBarContainer');
+    const progressBar = document.getElementById('fpTerminalProgressBar');
+    const progressLabel = document.getElementById('fpTerminalProgressLabel');
+    const progressSec = document.getElementById('fpTerminalProgressSec');
+    const btnIngreso = document.getElementById('btnSimularIngresoCamara');
+    const btnRechazo = document.getElementById('btnSimularRechazoCamara');
     const resBox = document.getElementById('fpResultadoAccesoBox');
 
     if (btnIngreso) btnIngreso.disabled = true;
     if (btnRechazo) btnRechazo.disabled = true;
     if (resBox) resBox.style.display = 'none';
 
-    if (scanPad) {
-        scanPad.classList.remove('success', 'denied');
-        scanPad.classList.add('scanning');
+    // Bloqueo visual del recuadro sobre el dedo
+    if (box) {
+        box.className = (tipo === 'INGRESO') ? 'dynamic-finger-box locked' : 'dynamic-finger-box detected';
     }
-    if (statusTxt) {
-        statusTxt.textContent = 'ESCANEA YEMA DACTILAR (SENSOR AS608)...';
+    if (tag) {
+        tag.textContent = (tipo === 'INGRESO') ? 'ANALIZANDO CRESTAS...' : 'EXAMINANDO MINUCIAS...';
     }
 
-    // Sonido de barrido láser
+    // Audio de barrido láser
     audioSeguridad.sonarEscaneoLaser();
+
+    // Mostrar barra de progreso sobre la cámara
+    if (progressBox) progressBox.style.display = 'block';
+    if (progressBar) progressBar.style.width = '35%';
+    if (progressLabel) progressLabel.textContent = 'Enfocando relieve papilar en recuadro...';
+    if (progressSec) progressSec.textContent = '0.3s / 1.0s';
+
+    await new Promise(r => setTimeout(r, 280));
+    if (progressBar) progressBar.style.width = '75%';
+    if (progressLabel) progressLabel.textContent = 'Verificando minucias con SQLite...';
+    if (progressSec) progressSec.textContent = '0.7s / 1.0s';
 
     const select = document.getElementById('selectFiltroHuellaUsuario');
     const usuarioId = (select && select.value) ? select.value : null;
 
     try {
-        // Breve animación realista de escaneo milimétrico (650 ms)
-        await new Promise(r => setTimeout(r, 650));
-
         let resultado = null;
         try {
             const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 8000);
+            const timer = setTimeout(() => controller.abort(), 7000);
             const resp = await fetch('/api/biometria/simular_huella', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1829,7 +1799,11 @@ async function ejecutarSimulacionHuella(tipo) {
             resultado = null;
         }
 
-        // Si no hay respuesta del backend o falla la red, fallback consistente
+        if (progressBar) progressBar.style.width = '100%';
+        if (progressSec) progressSec.textContent = '1.0s / 1.0s';
+        await new Promise(r => setTimeout(r, 200));
+        if (progressBox) progressBox.style.display = 'none';
+
         if (!resultado) {
             const esIngreso = (tipo === 'INGRESO');
             const colabNombre = (select && select.selectedOptions[0] && select.selectedOptions[0].getAttribute('data-nombre')) || 'Kleverd Gabriel Apaza Quispe';
@@ -1860,27 +1834,10 @@ async function ejecutarSimulacionHuella(tipo) {
             };
         }
 
-        if (scanPad) {
-            scanPad.classList.remove('scanning');
-            if (resultado.estado === 'PERMITIDO') {
-                scanPad.classList.add('success');
-                setTimeout(() => scanPad.classList.remove('success'), 4000);
-            } else {
-                scanPad.classList.add('denied');
-                setTimeout(() => scanPad.classList.remove('denied'), 4000);
-            }
-        }
-
-        if (statusTxt) {
-            statusTxt.textContent = resultado.estado === 'PERMITIDO'
-                ? `✓ AUTORIZADO (${resultado.confianza || 98.5}%)`
-                : `✕ DENEGADO (NO COINCIDE)`;
-        }
-
-        // Llamar a procesarResultadoHuellaOpticaUI para alert SweetAlert2, badge y sonido
+        // Procesar resultado (muestra SweetAlert2, modal flotante, sonido de puerta/buzzer y desasegura puerta)
         procesarResultadoHuellaOpticaUI(resultado);
 
-        // Actualizar telemetría global en tiempo real
+        // Actualizar estadísticas del dashboard en tiempo real
         if (typeof cargarEstadisticasDashboard === 'function') {
             cargarEstadisticasDashboard();
         }
@@ -1895,9 +1852,9 @@ async function ejecutarSimulacionHuella(tipo) {
         }
 
     } catch (err) {
-        console.error('[SIMULADOR HUELLA ERROR GENERAL]', err);
+        console.error('[SIMULADOR CAMARA ERROR]', err);
     } finally {
-        window._simulandoHuella = false;
+        window._simulandoHuellaCamara = false;
         if (btnIngreso) btnIngreso.disabled = false;
         if (btnRechazo) btnRechazo.disabled = false;
     }
