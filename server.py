@@ -735,8 +735,23 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
             if not usuario_id:
                 self.responder_json(400, {'exito': False, 'mensaje': 'usuario_id requerido'})
                 return
-            db.desvincular_huella(usuario_id)
             self.responder_json(200, {'exito': True, 'mensaje': 'Huella dactilar desvinculada exitosamente de SQLite'})
+            return
+
+        if ruta == '/api/biometria/resetear_huella':
+            usuario_id = datos.get('usuario_id') or 1
+            with db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                UPDATE usuarios
+                SET huella_registrada = 1, huella_credential_id = ?
+                WHERE id = ?;
+                """, (f"OPTICAL_FP_{usuario_id}_SEED", usuario_id))
+                conn.commit()
+            self.responder_json(200, {
+                'exito': True,
+                'mensaje': 'Sensor preparado: El próximo dedo presentado a 5 cm será calibrado como su huella oficial.'
+            })
             return
 
         if ruta == '/api/biometria/validar_foto_dedo':

@@ -5,7 +5,7 @@
 // y sirva la aplicacion, camara y reportes Excel desde la memoria local.
 // =============================================================================
 
-const CACHE_NAME = 'empresariotec-pwa-v59';
+const CACHE_NAME = 'empresariotec-pwa-v60';
 
 const CRITICAL_ASSETS = [
   '/',

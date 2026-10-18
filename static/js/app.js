@@ -2034,6 +2034,54 @@ async function alternarFlashLinternaHuella() {
 }
 
 /**
+ * Permite al usuario resetear su huella en SQLite para cambiar de dedo
+ * o calibrar un nuevo dedo como única firma autorizada.
+ */
+async function solicitarRecalibrarDedoTerminal() {
+    const select = document.getElementById('selectFiltroHuellaUsuario');
+    const idUsuario = (select && select.value) ? select.value : 1;
+
+    if (typeof Swal !== 'undefined') {
+        const confirmacion = await Swal.fire({
+            title: '¿Cambiar Dedo Autorizado?',
+            text: 'Se restablecerá la firma dactilar en SQLite. El próximo dedo que acerque a 5 cm será calibrado como el único dedo con acceso.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0284c7',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Sí, Cambiar Dedo',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!confirmacion.isConfirmed) return;
+    }
+
+    try {
+        const resp = await fetch('/api/biometria/resetear_huella', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario_id: idUsuario })
+        });
+        const datos = await resp.json();
+        if (datos.exito) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Sensor Preparado!',
+                    text: 'Acerque ahora su NUEVO dedo a 5 cm de la cámara para registrarlo como la firma biométrica oficial.',
+                    timer: 3500,
+                    showConfirmButton: true
+                });
+            } else {
+                alert('Sensor preparado: Acerque su nuevo dedo a 5 cm para registrarlo.');
+            }
+        }
+    } catch (e) {
+        console.error('[RECALIBRAR ERROR]', e);
+    }
+}
+
+/**
  * Expande el visor a Pantalla Completa Móvil (Modo Kiosco de Seguridad).
  */
 function expandirEscanerHuellaFullscreen() {
@@ -2222,64 +2270,20 @@ async function capturarHuellaOpticaMilimetrica() {
 
     if (progressBox) progressBox.style.display = 'none';
 
-    try {
-        // Si no hay respuesta del servidor o estamos en offline total / reconexión:
-        if (!resultado || resultado.offline || !resultado.estado || resultado.motivo === 'SIN_PLANTILLAS') {
-            let trabajadores = await OfflineStorage.obtenerTrabajadores();
-            if (!trabajadores || trabajadores.length === 0) {
-                trabajadores = AppState.trabajadores || OfflineStorage.SEED_TRABAJADORES;
-            }
-
-            let trabajador = null;
-            if (idFiltro) {
-                trabajador = trabajadores.find(t => String(t.id) === String(idFiltro));
-            }
-            if (!trabajador && trabajadores.length > 0) {
-                trabajador = trabajadores.find(t => t.estado === 'ACTIVO' && t.huella_registrada)
-                          || trabajadores.find(t => t.estado === 'ACTIVO')
-                          || trabajadores[0];
-            }
-
-            if (trabajador) {
-                const ahoraISO = obtenerFechaHoraPeruISO();
-                const nuevoEvento = {
-                    tipo: 'acceso',
-                    usuario_id: trabajador.id,
-                    nombre_usuario: `${trabajador.nombres} ${trabajador.apellidos}`,
-                    dni: trabajador.dni,
-                    metodo: 'HUELLA',
-                    terminal: 'TERMINAL_HUELLA',
-                    estado: 'PERMITIDO',
-                    detalle: 'Huella óptica 1:N identificada con 99.4% (48 minucias ORB • SQLite Local)',
-                    timestamp: ahoraISO
-                };
-                await OfflineStorage.encolarAccesoOffline(nuevoEvento);
-
-                let logsActuales = await OfflineStorage.obtenerLogs();
-                nuevoEvento.id = (logsActuales[0]?.id || 800) + 1;
-                logsActuales.unshift(nuevoEvento);
-                AppState.todosLosLogs = logsActuales;
-                await OfflineStorage.guardarLogs(logsActuales);
-
-                const tbody = document.getElementById('tablaLogsBody');
-                if (tbody) renderizarFilasLogs(logsActuales, '');
-
-                audioSeguridad.sonarAccesoPermitido();
-                procesarResultadoHuellaOpticaUI({
-                    estado: 'PERMITIDO',
-                    colaborador: trabajador,
-                    dedo: 'Yema Dactilar (Validación Autónoma Offline)',
-                    confianza: 99.4,
-                    minucias_coincidentes: 48,
-                    offline: true
-                });
-                return;
-            }
-
+        if (!resultado) {
             procesarResultadoHuellaOpticaUI({
                 estado: 'DENEGADO',
-                mensaje: 'Modo Autónomo Offline',
-                detalle: 'No se encontraron colaboradores registrados en la base de datos local.'
+                mensaje: 'Error de Servidor Biométrico',
+                detalle: 'No se pudo comunicar con el motor dactilar en SQLite. Intente nuevamente.'
+            });
+            return;
+        }
+
+        if (resultado.motivo === 'SIN_PLANTILLAS') {
+            procesarResultadoHuellaOpticaUI({
+                estado: 'DENEGADO',
+                mensaje: 'Sin Huellas Registradas',
+                detalle: 'Presione el botón "Cambiar Dedo" superior para registrar su huella autorizada.'
             });
             return;
         }
