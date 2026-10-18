@@ -2270,6 +2270,7 @@ async function capturarHuellaOpticaMilimetrica() {
 
     if (progressBox) progressBox.style.display = 'none';
 
+    try {
         if (!resultado) {
             procesarResultadoHuellaOpticaUI({
                 estado: 'DENEGADO',
