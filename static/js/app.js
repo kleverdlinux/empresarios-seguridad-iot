@@ -2246,26 +2246,30 @@ async function capturarHuellaOpticaMilimetrica() {
     const idFiltro = (select && select.value) ? select.value : null;
 
     let resultado = null;
-    if (navigator.onLine && estaConectadoAlServidor) {
+    try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 12000);
+        const resp = await fetch('/api/biometria/verificar_huella_optica', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                imagen_base64: b64,
+                usuario_id_filtro: idFiltro
+            }),
+            signal: controller.signal
+        });
+        clearTimeout(timer);
         try {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 6500);
-            const resp = await fetch('/api/biometria/verificar_huella_optica', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    imagen_base64: b64,
-                    usuario_id_filtro: idFiltro
-                }),
-                signal: controller.signal
-            });
-            clearTimeout(timer);
-            if (resp.ok) {
-                resultado = await resp.json();
-            }
-        } catch (netErr) {
+            resultado = await resp.json();
+        } catch (jsonErr) {
             resultado = null;
         }
+        if (resp.ok) {
+            estaConectadoAlServidor = true;
+        }
+    } catch (netErr) {
+        console.warn('[VERIFICAR HUELLA TIMEOUT/NET]', netErr);
+        resultado = null;
     }
 
     if (progressBox) progressBox.style.display = 'none';
@@ -2274,8 +2278,8 @@ async function capturarHuellaOpticaMilimetrica() {
         if (!resultado) {
             procesarResultadoHuellaOpticaUI({
                 estado: 'DENEGADO',
-                mensaje: 'Error de Servidor Biométrico',
-                detalle: 'No se pudo comunicar con el motor dactilar en SQLite. Intente nuevamente.'
+                mensaje: 'Reconectando con Servidor',
+                detalle: 'El servidor está procesando la solicitud. Asegúrese de tener buena conexión e intente nuevamente.'
             });
             return;
         }
