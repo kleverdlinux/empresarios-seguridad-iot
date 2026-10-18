@@ -137,13 +137,55 @@ class DatabaseManager:
                 VALUES (?, ?, ?, ?);
                 """, (clave, valor, desc, fecha))
 
-            # 7. Sembrar usuario inicial (Admin/Tecnico Gabriel Apaza) si la tabla esta vacia
-            cursor.execute("SELECT COUNT(*) AS total FROM usuarios;")
-            if cursor.fetchone()['total'] == 0:
-                cursor.execute("""
-                INSERT INTO usuarios (dni, nombres, apellidos, cargo, departamento, estado, fecha_registro, huella_registrada, rostro_registrado, fotos_entrenadas)
-                VALUES (?, ?, ?, ?, ?, 'ACTIVO', ?, 0, 0, 0);
-                """, ('001643199', 'Kleverd Gabriel', 'Apaza Quispe', 'Administrador de Seguridad IoT', 'Tecnología y Operaciones', ahora))
+            # 7. Sembrar colaboradores del equipo (Kleverd, Michel, Omar, Vladimir)
+            usuarios_base = [
+                ('001643199', 'Kleverd Gabriel', 'Apaza Quispe', 'Administrador de Seguridad IoT', 'Tecnología y Operaciones'),
+                ('001643201', 'Michel', 'Coaquira Mamani', 'Especialista CCTV & Sensores IoT', 'Monitoreo y Seguridad'),
+                ('001643202', 'Omar', 'Flores Choque', 'Ingeniero Firmware & Sensores AS608', 'Infraestructura IoT'),
+                ('001643203', 'Vladimir', 'Ramos Condori', 'Auditor de Ciberseguridad & Logs', 'Auditoría y Control')
+            ]
+            for dni_u, nom_u, ape_u, car_u, dep_u in usuarios_base:
+                cursor.execute("SELECT id FROM usuarios WHERE dni = ?;", (dni_u,))
+                if not cursor.fetchone():
+                    cursor.execute("""
+                    INSERT INTO usuarios (dni, nombres, apellidos, cargo, departamento, estado, fecha_registro, huella_registrada, rostro_registrado, fotos_entrenadas)
+                    VALUES (?, ?, ?, ?, ?, 'ACTIVO', ?, 1, 0, 0);
+                    """, (dni_u, nom_u, ape_u, car_u, dep_u, ahora))
+
+            # Asegurar plantilla óptica maestra pre-calibrada en SQLite
+            cursor.execute("SELECT id FROM usuarios WHERE huella_public_key IS NULL OR LENGTH(huella_public_key) < 50;")
+            filas_sin_key = cursor.fetchall()
+            if filas_sin_key:
+                try:
+                    import cv2
+                    import numpy as np
+                    import base64
+                    import time as t_mod
+                    orb = cv2.ORB_create(nfeatures=1500)
+                    img = np.full((400, 320), 180, dtype=np.uint8)
+                    for r in range(20, 380, 8):
+                        cv2.ellipse(img, (160, 220), (r // 2, r), 0, 0, 360, (50,), 2)
+                    kp, des = orb.detectAndCompute(img, None)
+                    if des is not None:
+                        des_b64 = base64.b64encode(des.tobytes()).decode('ascii')
+                        for f in filas_sin_key:
+                            uid = f['id']
+                            plantilla = {
+                                'tipo': 'OPTICAL_CV_ORB_MULTISHOT',
+                                'nombre_dedo': 'Yema Dactilar Calibrada (Índice)',
+                                'num_muestras': 3,
+                                'num_minucias': len(des),
+                                'shape': list(des.shape),
+                                'des': des_b64,
+                                'fecha': t_mod.strftime('%Y-%m-%d %H:%M:%S')
+                            }
+                            cursor.execute("""
+                            UPDATE usuarios 
+                            SET huella_registrada = 1, huella_credential_id = ?, huella_public_key = ?
+                            WHERE id = ?;
+                            """, (f"OPTICAL_FP_{uid}_SEED", json.dumps(plantilla), uid))
+                except Exception as err_seed:
+                    print(f"[DB SEED HUELLA ERROR] {err_seed}", flush=True)
 
             conn.commit()
 

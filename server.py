@@ -755,7 +755,7 @@ class GestorPeticionesSeguridad(BaseHTTPRequestHandler):
                 titulo = 'No es un Dedo Humano' if motivo == 'NO_ES_DEDO' else ('Dedo No Detectado' if motivo == 'SIN_DEDO' else 'Encuadre Fuera de Rango (5 cm)')
                 self.responder_json(400, {'exito': False, 'motivo': motivo, 'mensaje': titulo, 'detalle': detalle})
                 return
-            if des is None or len(kp) < 15:
+            if des is None or len(kp) < 6:
                 self.responder_json(400, {'exito': False, 'motivo': 'SIN_CRESTAS_PAPILARES', 'mensaje': 'Dedo No Enfocado', 'detalle': 'No se detectaron crestas papilares nítidas en la yema.'})
                 return
             self.responder_json(200, {

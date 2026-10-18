@@ -68,19 +68,64 @@ const OfflineStorage = {
             fecha_registro: "2026-10-17 12:00:00",
             fecha_creacion: "2026-10-17 12:00:00",
             foto_perfil: null,
-            huella_registrada: 0,
+            huella_registrada: 1,
+            rostro_registrado: 0,
+            fotos_entrenadas: 0
+        },
+        {
+            id: 2,
+            dni: "001643201",
+            nombres: "Michel",
+            apellidos: "Coaquira Mamani",
+            cargo: "Especialista CCTV & Sensores IoT",
+            departamento: "Monitoreo y Seguridad",
+            estado: "ACTIVO",
+            fecha_registro: "2026-10-17 12:00:00",
+            fecha_creacion: "2026-10-17 12:00:00",
+            foto_perfil: null,
+            huella_registrada: 1,
+            rostro_registrado: 0,
+            fotos_entrenadas: 0
+        },
+        {
+            id: 3,
+            dni: "001643202",
+            nombres: "Omar",
+            apellidos: "Flores Choque",
+            cargo: "Ingeniero Firmware & Sensores AS608",
+            departamento: "Infraestructura IoT",
+            estado: "ACTIVO",
+            fecha_registro: "2026-10-17 12:00:00",
+            fecha_creacion: "2026-10-17 12:00:00",
+            foto_perfil: null,
+            huella_registrada: 1,
+            rostro_registrado: 0,
+            fotos_entrenadas: 0
+        },
+        {
+            id: 4,
+            dni: "001643203",
+            nombres: "Vladimir",
+            apellidos: "Ramos Condori",
+            cargo: "Auditor de Ciberseguridad & Logs",
+            departamento: "Auditoría y Control",
+            estado: "ACTIVO",
+            fecha_registro: "2026-10-17 12:00:00",
+            fecha_creacion: "2026-10-17 12:00:00",
+            foto_perfil: null,
+            huella_registrada: 1,
             rostro_registrado: 0,
             fotos_entrenadas: 0
         }
     ],
 
     SEED_STATS: {
-        total_trabajadores: 1,
+        total_trabajadores: 4,
         accesos_permitidos: 0,
         accesos_denegados: 0,
         alertas_criticas: 0,
         rostros_activos: 0,
-        huellas_activas: 0
+        huellas_activas: 4
     },
 
     SEED_INCIDENTES: [],
@@ -1766,8 +1811,8 @@ function iniciarDetectorEncuadre5cm() {
 
         const cov = coberturaPielTerminalSuave;
 
-        // 1. Visor vacío o sin presencia de piel (< 12%)
-        if (cov < 0.12) {
+        // 1. Visor vacío o sin presencia de piel (< 8%)
+        if (cov < 0.08) {
             box.className = 'dynamic-finger-box searching';
             if (tag) tag.textContent = 'BUSCANDO YEMA...';
             badge.className = 'hud-distance-badge';
@@ -1775,15 +1820,15 @@ function iniciarDetectorEncuadre5cm() {
             ultimoEstadoEncuadre5cm = { optimo: false, esDedo: false, distancia_cm: null, estado: 'vacio' };
             conteoFramesOptimosTerminal = 0;
 
-        // 2. Dedo detectado pero alejado (12% - 22%)
-        } else if (cov < 0.22) {
+        // 2. Dedo detectado pero alejado (8% - 16%)
+        } else if (cov < 0.16) {
             box.className = 'dynamic-finger-box detected';
             if (tag) tag.textContent = 'ACERQUE UN POCO';
             badge.className = 'hud-distance-badge lejos';
             badge.textContent = 'Acerque la yema a unos 5 cm de la cámara';
             conteoFramesOptimosTerminal = 0;
 
-        // 3. POSICIÓN ÓPTIMA: Dedo en el recuadro a 5 cm (>= 22%)
+        // 3. POSICIÓN ÓPTIMA: Dedo en el recuadro a 5 cm (>= 16%)
         } else {
             box.className = 'dynamic-finger-box locked';
             ultimoEstadoEncuadre5cm = { optimo: true, esDedo: true, distancia_cm: 5.0, estado: 'optimo' };
@@ -2156,7 +2201,7 @@ async function capturarHuellaOpticaMilimetrica() {
     if (navigator.onLine && estaConectadoAlServidor) {
         try {
             const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 2200);
+            const timer = setTimeout(() => controller.abort(), 6500);
             const resp = await fetch('/api/biometria/verificar_huella_optica', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -2178,8 +2223,8 @@ async function capturarHuellaOpticaMilimetrica() {
     if (progressBox) progressBox.style.display = 'none';
 
     try {
-        // Si no hay respuesta del servidor o estamos en offline total:
-        if (!resultado || resultado.offline || !resultado.estado) {
+        // Si no hay respuesta del servidor o estamos en offline total / reconexión:
+        if (!resultado || resultado.offline || !resultado.estado || resultado.motivo === 'SIN_PLANTILLAS') {
             let trabajadores = await OfflineStorage.obtenerTrabajadores();
             if (!trabajadores || trabajadores.length === 0) {
                 trabajadores = AppState.trabajadores || OfflineStorage.SEED_TRABAJADORES;

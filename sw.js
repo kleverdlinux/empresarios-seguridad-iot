@@ -5,7 +5,7 @@
 // y sirva la aplicacion, camara y reportes Excel desde la memoria local.
 // =============================================================================
 
-const CACHE_NAME = 'empresariotec-pwa-v58';
+const CACHE_NAME = 'empresariotec-pwa-v59';
 
 const CRITICAL_ASSETS = [
   '/',
@@ -35,7 +35,49 @@ const SEED_API_DATA = {
         estado: "ACTIVO",
         fecha_registro: "2026-10-17 12:00:00",
         foto_perfil: null,
-        huella_registrada: 0,
+        huella_registrada: 1,
+        rostro_registrado: 0,
+        fotos_entrenadas: 0
+      },
+      {
+        id: 2,
+        dni: "001643201",
+        nombres: "Michel",
+        apellidos: "Coaquira Mamani",
+        cargo: "Especialista CCTV & Sensores IoT",
+        departamento: "Monitoreo y Seguridad",
+        estado: "ACTIVO",
+        fecha_registro: "2026-10-17 12:00:00",
+        foto_perfil: null,
+        huella_registrada: 1,
+        rostro_registrado: 0,
+        fotos_entrenadas: 0
+      },
+      {
+        id: 3,
+        dni: "001643202",
+        nombres: "Omar",
+        apellidos: "Flores Choque",
+        cargo: "Ingeniero Firmware & Sensores AS608",
+        departamento: "Infraestructura IoT",
+        estado: "ACTIVO",
+        fecha_registro: "2026-10-17 12:00:00",
+        foto_perfil: null,
+        huella_registrada: 1,
+        rostro_registrado: 0,
+        fotos_entrenadas: 0
+      },
+      {
+        id: 4,
+        dni: "001643203",
+        nombres: "Vladimir",
+        apellidos: "Ramos Condori",
+        cargo: "Auditor de Ciberseguridad & Logs",
+        departamento: "Auditoría y Control",
+        estado: "ACTIVO",
+        fecha_registro: "2026-10-17 12:00:00",
+        foto_perfil: null,
+        huella_registrada: 1,
         rostro_registrado: 0,
         fotos_entrenadas: 0
       }
@@ -45,12 +87,12 @@ const SEED_API_DATA = {
     exito: true,
     offline: true,
     stats: {
-      total_trabajadores: 1,
+      total_trabajadores: 4,
       accesos_permitidos: 0,
       accesos_denegados: 0,
       alertas_criticas: 0,
       rostros_activos: 0,
-      huellas_activas: 0
+      huellas_activas: 4
     }
   },
   '/api/logs/accesos': {
