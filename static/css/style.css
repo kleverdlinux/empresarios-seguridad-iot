@@ -3797,5 +3797,279 @@ body.is-login-screen .login-view-wrapper {
   margin: auto !important;
 }
 
+/* ==========================================================================
+   SIMULADOR DACTILAR BIOMETRICO IOT (ARATEK AS608)
+   ========================================================================== */
+.fp-simulator-layout {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  background: radial-gradient(circle at 50% 25%, #0f2744 0%, #071120 50%, #020617 100%) !important;
+  overflow-y: auto !important;
+}
+
+.fp-simulator-cyber-bg {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.fp-simulator-center-stage {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 92%;
+  max-width: 440px;
+  gap: 1.15rem;
+  padding: 1.5rem 1rem;
+  margin: auto;
+}
+
+.fp-sensor-badge-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(15, 23, 42, 0.85);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 0.4rem 0.9rem;
+  border-radius: 9999px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.fp-sensor-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 10px #22c55e;
+  animation: pulseSensorDot 1.5s infinite;
+}
+
+@keyframes pulseSensorDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* Scanner Pad */
+.fp-scanner-pad {
+  position: relative;
+  width: 175px;
+  height: 205px;
+  border-radius: 24px;
+  background: rgba(15, 23, 42, 0.82);
+  border: 2px solid rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 30px rgba(56, 189, 248, 0.18), inset 0 0 25px rgba(56, 189, 248, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fp-fingerprint-svg {
+  width: 90px;
+  height: 90px;
+  color: #38bdf8;
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.5));
+  transition: all 0.3s ease;
+  z-index: 5;
+}
+
+.fp-pad-scanner-beam {
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #38bdf8, #ffffff, #38bdf8, transparent);
+  box-shadow: 0 0 15px #38bdf8, 0 0 25px #0284c7;
+  opacity: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.fp-scanner-pad.scanning .fp-pad-scanner-beam {
+  opacity: 1;
+  animation: scanPadBeam 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes scanPadBeam {
+  0% { top: 10px; }
+  100% { top: 185px; }
+}
+
+.fp-scanner-pad.scanning {
+  border-color: #38bdf8;
+  box-shadow: 0 0 45px rgba(56, 189, 248, 0.45), inset 0 0 35px rgba(56, 189, 248, 0.2);
+}
+
+.fp-scanner-pad.success {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 45px rgba(34, 197, 94, 0.6), inset 0 0 30px rgba(34, 197, 94, 0.25) !important;
+}
+
+.fp-scanner-pad.success .fp-fingerprint-svg {
+  color: #4ade80 !important;
+  filter: drop-shadow(0 0 14px rgba(74, 222, 128, 0.8)) !important;
+}
+
+.fp-scanner-pad.denied {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 45px rgba(239, 68, 68, 0.6), inset 0 0 30px rgba(239, 68, 68, 0.25) !important;
+}
+
+.fp-scanner-pad.denied .fp-fingerprint-svg {
+  color: #f87171 !important;
+  filter: drop-shadow(0 0 14px rgba(248, 113, 113, 0.8)) !important;
+}
+
+.fp-pad-status-tag {
+  position: absolute;
+  bottom: 12px;
+  left: 8px;
+  right: 8px;
+  text-align: center;
+  font-size: 0.64rem;
+  font-weight: 800;
+  color: #cbd5e1;
+  letter-spacing: 0.4px;
+  background: rgba(2, 6, 23, 0.7);
+  padding: 0.25rem 0.4rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 6;
+}
+
+/* Action Buttons Container */
+.fp-simulador-actions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .fp-simulador-actions-container {
+    flex-direction: row;
+  }
+}
+
+.btn-sim-action {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1.15rem;
+  border-radius: 16px;
+  border: 1.5px solid;
+  cursor: pointer;
+  outline: none;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.btn-sim-action:active {
+  transform: scale(0.97);
+}
+
+.btn-sim-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-sim-ingreso {
+  background: linear-gradient(135deg, rgba(20, 83, 45, 0.92) 0%, rgba(22, 101, 52, 0.95) 100%);
+  border-color: #22c55e;
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.35);
+  color: #ffffff;
+}
+
+.btn-sim-ingreso:hover {
+  background: linear-gradient(135deg, rgba(22, 101, 52, 0.98) 0%, rgba(34, 197, 94, 0.98) 100%);
+  box-shadow: 0 6px 28px rgba(34, 197, 94, 0.55);
+}
+
+.btn-sim-rechazo {
+  background: linear-gradient(135deg, rgba(127, 29, 29, 0.92) 0%, rgba(153, 27, 27, 0.95) 100%);
+  border-color: #ef4444;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.35);
+  color: #ffffff;
+}
+
+.btn-sim-rechazo:hover {
+  background: linear-gradient(135deg, rgba(153, 27, 27, 0.98) 0%, rgba(220, 38, 38, 0.98) 100%);
+  box-shadow: 0 6px 28px rgba(239, 68, 68, 0.55);
+}
+
+.btn-sim-icon-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-sim-icon-circle .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-sim-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.btn-sim-title {
+  font-size: 0.96rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+}
+
+.btn-sim-sub {
+  font-size: 0.72rem;
+  opacity: 0.88;
+  font-weight: 500;
+  margin-top: 0.15rem;
+}
+
+.fp-telemetry-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 0.2rem;
+}
+
+
 
 

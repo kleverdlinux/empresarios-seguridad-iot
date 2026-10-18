@@ -27,3 +27,6 @@ Desktop.ini
 
 # Logs
 *.log
+
+# Scratch scripts
+scratch/
