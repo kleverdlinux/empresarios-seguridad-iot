@@ -1481,6 +1481,8 @@ async function procesarVerificacionFacialOffline(ctx, canvas, filtroVal) {
     }
 }
 
+let tsPrimerFalloFacial = 0;
+
 function actualizarUIResultadoFacial(res) {
     const ledBar = document.getElementById('facialLedBar');
     const bracket = document.getElementById('facialBracket');
@@ -1497,6 +1499,7 @@ function actualizarUIResultadoFacial(res) {
     };
 
     if (res.estado === 'PERMITIDO') {
+        tsPrimerFalloFacial = 0;
         ledBar.className = 'facial-led-bar granted';
         bracket.className = 'facial-target-bracket granted';
         pill.textContent = `✓ EXACT: ${res.trabajador.nombres} (${res.similitud}%)`;
@@ -1518,6 +1521,34 @@ function actualizarUIResultadoFacial(res) {
             </div>
         `;
 
+        // Ventana emergente SweetAlert2 con datos del usuario y confirmacion "Puede ingresar" (4 segundos)
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Acceso Autorizado!',
+                html: `
+                    <div style="font-size: 1.25rem; font-weight: 800; color: #16a34a; margin: 0.3rem 0 0.8rem 0;">
+                        Puede ingresar
+                    </div>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 0.85rem; text-align: left; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="font-size: 1.12rem; font-weight: 800; color: #0f172a; margin-bottom: 0.3rem;">
+                            ${res.trabajador.nombres} ${res.trabajador.apellidos}
+                        </div>
+                        <div style="font-size: 0.9rem; color: #334155; margin-bottom: 0.2rem;">
+                            <strong>DNI:</strong> ${res.trabajador.dni}
+                        </div>
+                        <div style="font-size: 0.85rem; color: #64748b;">
+                            <strong>Cargo:</strong> ${res.trabajador.cargo || 'Operativo'} &bull; <strong>Área:</strong> ${res.trabajador.departamento || 'General'}
+                        </div>
+                    </div>
+                `,
+                timer: 4000,
+                timerProgressBar: true,
+                showConfirmButton: false,
+                allowOutsideClick: false
+            });
+        }
+
         clearInterval(AppState.intervaloEscaneoFacial);
         setTimeout(() => {
             if (AppState.vistaActual === 'facial') {
@@ -1529,6 +1560,22 @@ function actualizarUIResultadoFacial(res) {
         }, 4500);
 
     } else if (res.estado === 'DENEGADO') {
+        // Tolerancia de 3 segundos mientras el colaborador acomoda su rostro frente a la camara
+        if (!tsPrimerFalloFacial) {
+            tsPrimerFalloFacial = Date.now();
+        }
+        const tiempoFallo = Date.now() - tsPrimerFalloFacial;
+
+        if (tiempoFallo < 3000) {
+            // Aún dentro del periodo de tolerancia: guiar sin sonar alarma estridente
+            ledBar.className = 'facial-led-bar scanning';
+            bracket.className = 'facial-target-bracket';
+            pill.textContent = 'Alineando rostro... manténgase frente al visor';
+            return;
+        }
+
+        // Transcurridos más de 3 segundos continuos sin coincidencia, disparar alarma denegada
+        tsPrimerFalloFacial = 0;
         ledBar.className = 'facial-led-bar denied';
         bracket.className = 'facial-target-bracket denied';
         audioSeguridad.sonarAccesoDenegado();
@@ -1577,9 +1624,10 @@ function actualizarUIResultadoFacial(res) {
                 bracket.className = 'facial-target-bracket';
                 pill.textContent = obtenerTextoPillActivo();
             }
-        }, 2500);
+        }, 2800);
 
     } else if (res.estado === 'BUSCANDO') {
+        tsPrimerFalloFacial = 0;
         ledBar.className = 'facial-led-bar scanning';
         bracket.className = 'facial-target-bracket';
         pill.textContent = res.mensaje || obtenerTextoPillActivo();
@@ -1741,16 +1789,16 @@ function iniciarDetectorEncuadre5cm() {
             ultimoEstadoEncuadre5cm = { optimo: true, esDedo: true, distancia_cm: 5.0, estado: 'optimo' };
             conteoFramesOptimosTerminal++;
 
-            // Cuenta regresiva paciente de 1.8 segundos para enfocar el dedo
-            if (conteoFramesOptimosTerminal < 4) {
+            // Cuenta regresiva paciente de 2.5 a 3 segundos para enfocar el dedo
+            if (conteoFramesOptimosTerminal < 6) {
                 if (tag) tag.textContent = '✓ ENFOCANDO... (2s)';
                 badge.className = 'hud-distance-badge optimo';
-                badge.textContent = '✓ Yema detectada • Mantenga firme... (2s)';
-            } else if (conteoFramesOptimosTerminal < 8) {
+                badge.textContent = '✓ Yema detectada • Acomodando... (2s)';
+            } else if (conteoFramesOptimosTerminal < 12) {
                 if (tag) tag.textContent = '✓ ENFOCANDO... (1s)';
                 badge.className = 'hud-distance-badge optimo';
                 badge.textContent = '✓ Enfocando crestas de la yema... (1s)';
-            } else if (conteoFramesOptimosTerminal < 11) {
+            } else if (conteoFramesOptimosTerminal < 16) {
                 if (tag) tag.textContent = '✓ ESCANEANDO...';
                 badge.className = 'hud-distance-badge optimo';
                 badge.textContent = '✓ Enfoque listo • Escaneando huella...';
@@ -2208,6 +2256,8 @@ async function capturarHuellaOpticaMilimetrica() {
 // Alias de compatibilidad
 const ejecutarEscaneoHuellaOpticaCamara = capturarHuellaOpticaMilimetrica;
 
+let ultimoSonidoDenegadoHuella = 0;
+
 /**
  * Muestra el resultado de verificación en una pequeña ventana compacta (no tan grande, no invasiva).
  */
@@ -2252,8 +2302,40 @@ function procesarResultadoHuellaOpticaUI(resultado) {
         `;
         resBox.style.display = 'block';
 
+        // Ventana emergente SweetAlert2 con datos del usuario y confirmacion "Puede ingresar" (4 segundos)
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Acceso Autorizado!',
+                html: `
+                    <div style="font-size: 1.25rem; font-weight: 800; color: #16a34a; margin: 0.3rem 0 0.8rem 0;">
+                        Puede ingresar
+                    </div>
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 0.85rem; text-align: left; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="font-size: 1.12rem; font-weight: 800; color: #0f172a; margin-bottom: 0.3rem;">
+                            ${nombreCompleto}
+                        </div>
+                        <div style="font-size: 0.9rem; color: #334155; margin-bottom: 0.2rem;">
+                            <strong>DNI:</strong> ${colab.dni || '--------'}
+                        </div>
+                        <div style="font-size: 0.85rem; color: #64748b;">
+                            <strong>Cargo:</strong> ${colab.cargo || 'Personal'} &bull; <strong>Método:</strong> Huella Dactilar
+                        </div>
+                    </div>
+                `,
+                timer: 4000,
+                timerProgressBar: true,
+                showConfirmButton: false,
+                allowOutsideClick: false
+            });
+        }
+
     } else {
-        audioSeguridad.sonarAccesoDenegado();
+        const ahora = Date.now();
+        if (ahora - ultimoSonidoDenegadoHuella > 3000) {
+            audioSeguridad.sonarAccesoDenegado();
+            ultimoSonidoDenegadoHuella = ahora;
+        }
         const mensaje = resultado.mensaje || 'Acceso Denegado';
         const detalle = resultado.detalle || 'La huella dactilar no coincide con los patrones registrados.';
 
